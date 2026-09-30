@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "PixelSquad",
-  "version": "0.5.3.6",
+  "version": "0.5.3.7",
   "description": "Painel unificado de construção, Wired, visuais, chat, tradução, Enables e Handitems para Habblet. Criado por Pricilao.",
   "permissions": [
     "storage",
@@ -96,7 +96,6 @@
     {
       "resources": [
         "icons/icon128.png",
-        "icons/pixelsquad-logo.svg",
         "icons/pixelsquad-loading.gif"
       ],
       "matches": [
