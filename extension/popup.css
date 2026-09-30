@@ -9,3 +9,5 @@ p{color:#b4aec5;line-height:1.4;margin:10px 0}
 button{width:100%;padding:11px;border:0;border-radius:9px;background:linear-gradient(135deg,#7452ff,#5b3be0);color:white;font-weight:bold;cursor:pointer;box-shadow:0 5px 16px rgba(116,82,255,.22)}
 button:hover{filter:brightness(1.08)}
 .small{font-size:11px;color:#716b83;margin-top:12px}
+button.secondary{margin-top:8px;background:#202a40;border:1px solid #3c4a68;box-shadow:none}
+button.secondary:hover{background:#2b3853}
