@@ -1,13 +1,10 @@
 {
-  "manifest_version": 3,
-  "name": "PixelSquad",
-  "version": "0.3.0",
-  "description": "PixelSquad — ferramentas de construção e Wired no Habblet. Criado por Pricilao.",
-  "permissions": ["storage", "activeTab"],
-  "host_permissions": ["https://www.habblet.city/*", "https://*.habblet.city/*"],
-  "action": {"default_title":"PixelSquad","default_popup":"popup.html"},
-  "content_scripts":[{
-    "matches":["https://www.habblet.city/*","https://*.habblet.city/*"],
-    "js":["locales.js","content.js"],"css":["content.css"],"run_at":"document_idle"
-  }]
+  "manifest_version":3,
+  "name":"PixelSquad",
+  "version":"0.4.0",
+  "description":"Ferramentas de construção e configuração de Wired para Habblet. Criado por Pricilao.",
+  "permissions":["storage","activeTab"],
+  "host_permissions":["https://www.habblet.city/*","https://*.habblet.city/*"],
+  "action":{"default_title":"PixelSquad","default_popup":"popup.html"},
+  "content_scripts":[{"matches":["https://www.habblet.city/*","https://*.habblet.city/*"],"js":["locales.js","content.js"],"css":["content.css"],"run_at":"document_idle"}]
 }
