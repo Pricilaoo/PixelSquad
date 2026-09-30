@@ -15,8 +15,8 @@ for(const [file,globalName,htmlFile,type,count] of [
   const image=card.querySelector('.effect-preview-image');
   const name=card.querySelector('.effect-name').cloneNode(true);
   name.querySelector('.effect-id').remove();
-  assert.equal(name.textContent.trim(),image.getAttribute('alt'));
-  return {id:Number(card.dataset.id),name:name.textContent.trim(),image:image.getAttribute('src')};
+  assert.equal(name.textContent.trim(),image.getAttribute('alt').trim());
+  return {id:Number(card.dataset.id),name:image.getAttribute('alt'),image:image.getAttribute('src')};
  });
  assert.equal(actual.length,count);assert.equal(source.length,count);
  assert.deepEqual(actual,source);
