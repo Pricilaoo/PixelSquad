@@ -16,7 +16,7 @@ jobs:
           node --check extension/locales.js
           node --check extension/content.js
           node --check extension/popup.js
-      node --check extension/toolsblet-importer.js
+          node --check extension/toolsblet-importer.js
       - name: Create extension ZIP
         run: cd extension && zip -r ../PixelSquad-latest.zip . -x '*.DS_Store'
       - uses: actions/upload-artifact@v4
