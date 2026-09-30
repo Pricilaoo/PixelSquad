@@ -329,3 +329,13 @@
 #pixelsquad .ps-item-star {position:absolute;right:7px;top:7px;z-index:3;padding:4px 6px;border:0;border-radius:6px;background:var(--ps-panel);color:var(--ps-accent);cursor:pointer;font-size:20px;line-height:1}
 #pixelsquad .ps-item-star[aria-pressed="true"] {color:#ffc95d}
 #pixelsquad #ps-item-favorites[aria-pressed="true"] {border-color:var(--ps-accent);color:var(--ps-accent)}
+
+/* Resizable catalog window and item previews. */
+#pixelsquad .box{resize:both!important;min-width:min(320px,calc(100vw - 24px))!important;min-height:min(280px,calc(100vh - 80px))!important;left:max(12px,calc(50vw - var(--ps-user-width,490px)/2))!important}
+#pixelsquad .box.ps-custom-position{left:var(--ps-left)!important;max-width:min(calc(100vw - 24px),calc(100vw - var(--ps-left) - 8px))!important;max-height:min(calc(100vh - 80px),calc(100vh - var(--ps-top) - 8px))!important}
+#pixelsquad .box.ps-user-size{width:var(--ps-user-width)!important;height:var(--ps-user-height)!important}
+#pixelsquad .enablegrid{grid-template-columns:repeat(auto-fill,minmax(min(110px,100%),1fr))!important}
+#pixelsquad .ps-item-preview{display:flex;align-items:center;justify-content:center;min-height:100px;border-radius:8px;background:color-mix(in srgb,var(--ps-panel) 80%,black)}
+#pixelsquad .ps-item-preview img{width:100%!important;height:100px!important;object-fit:contain!important;image-rendering:pixelated}
+#pixelsquad .ps-item-preview img[hidden],#pixelsquad .ps-item-preview span[hidden]{display:none!important}
+#pixelsquad .ps-item-preview span{padding:10px;color:var(--ps-text);opacity:.7;font-size:11px;text-align:center}
