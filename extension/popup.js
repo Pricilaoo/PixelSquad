@@ -1,0 +1,1 @@
+document.getElementById("open").onclick=async()=>{const [t]=await chrome.tabs.query({active:true,currentWindow:true});if(!t?.url?.includes("habblet.city"))return alert("Abra o Habblet primeiro.");chrome.tabs.sendMessage(t.id,{type:"openPanel"});window.close()};
