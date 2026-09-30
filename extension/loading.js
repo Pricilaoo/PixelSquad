@@ -18,7 +18,7 @@ const start=()=>{
   img.decoding="async";
   img.setAttribute("fetchpriority","high");
   img.style.cssText="display:block;width:240px;height:auto;max-width:46vw;image-rendering:auto;animation:pixelsquad-loader-pulse 1.2s ease-in-out infinite;";
-  img.onerror=()=>{img.onerror=null;img.src=chrome.runtime.getURL("icons/pixelsquad-logo.svg")};
+  img.onerror=()=>{img.onerror=null;img.src=chrome.runtime.getURL("icons/icon128.png")};
   overlay.appendChild(img);
   const style=document.createElement("style");
   style.textContent="@keyframes pixelsquad-loader-pulse{0%,100%{transform:scale(.98);opacity:.92}50%{transform:scale(1.02);opacity:1}}";
