@@ -39,6 +39,7 @@
         "https://*.habblet.city/*"
       ],
       "js": [
+        "loading.js",
         "locales.js",
         "translation.js",
         "content.js"
@@ -85,7 +86,8 @@
     {
       "resources": [
         "icons/icon128.png",
-        "icons/pixelsquad-logo.svg"
+        "icons/pixelsquad-logo.svg",
+        "icons/pixelsquad-loading.gif"
       ],
       "matches": [
         "https://www.habblet.city/*",
