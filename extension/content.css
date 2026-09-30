@@ -136,3 +136,61 @@
 
 #pixelsquad-launch img{display:block!important;width:100%!important;height:100%!important;object-fit:cover!important;border-radius:10px!important}
 #pixelsquad-launch::before{display:none!important}
+
+/* PixelSquad launcher: encaixado na barra inferior do Habblet */
+#pixelsquad-launch{
+  left:405px!important;
+  right:auto!important;
+  top:auto!important;
+  bottom:7px!important;
+  transform:none!important;
+  width:48px!important;
+  height:48px!important;
+  padding:3px!important;
+  box-sizing:border-box!important;
+  border-radius:8px!important;
+  background:#242424!important;
+  border:0!important;
+  box-shadow:0 1px 4px #0009!important;
+  z-index:2147483647!important;
+}
+#pixelsquad-launch img{
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+  border-radius:6px!important;
+  image-rendering:pixelated!important;
+}
+#pixelsquad-launch::before{display:none!important}
+#pixelsquad-launch:hover{
+  transform:translateY(-2px)!important;
+  border:1px solid #00dcbf!important;
+  box-shadow:0 2px 8px #000b!important;
+}
+#pixelsquad .box{
+  left:405px!important;
+  right:auto!important;
+  top:auto!important;
+  bottom:61px!important;
+  width:430px!important;
+  max-width:calc(100vw - 420px)!important;
+  height:min(720px,calc(100vh - 75px))!important;
+  max-height:calc(100vh - 75px)!important;
+  border-radius:12px!important;
+  animation:pixelsquad-slide-up .18s ease-out!important;
+}
+#pixelsquad header strong::before{display:none!important}
+#pixelsquad header strong img{width:28px;height:28px;object-fit:contain;vertical-align:middle;border-radius:6px}
+@keyframes pixelsquad-slide-up{
+  from{opacity:0;transform:translateY(12px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@media(max-width:900px){
+  #pixelsquad-launch{left:300px!important}
+  #pixelsquad .box{left:300px!important;max-width:calc(100vw - 315px)!important}
+}
+@media(max-width:600px){
+  #pixelsquad-launch{left:180px!important;bottom:7px!important;width:46px!important;height:46px!important}
+  #pixelsquad .box{left:8px!important;right:8px!important;bottom:60px!important;width:auto!important;max-width:none!important;height:calc(100vh - 68px)!important;max-height:none!important}
+}
