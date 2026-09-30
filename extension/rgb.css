@@ -1,0 +1,33 @@
+:root {
+  --ps-rgb-saturation:75%;
+  --ps-rgb-alpha:.35;
+  --ps-rgb-gradient:linear-gradient(110deg,hsl(0 var(--ps-rgb-saturation) 60% / var(--ps-rgb-alpha)),hsl(50 var(--ps-rgb-saturation) 60% / var(--ps-rgb-alpha)),hsl(145 var(--ps-rgb-saturation) 60% / var(--ps-rgb-alpha)),hsl(200 var(--ps-rgb-saturation) 60% / var(--ps-rgb-alpha)),hsl(265 var(--ps-rgb-saturation) 60% / var(--ps-rgb-alpha)),hsl(325 var(--ps-rgb-saturation) 60% / var(--ps-rgb-alpha)));
+}
+html.ps-rgb-sidebar #pixelsquad nav,
+html.ps-rgb-toolbar .nitro-toolbar,
+html.ps-rgb-purse .nitro-purse,
+html.ps-rgb-purse .nitro-purse-container > :not(.nitro-purse):not(:has(audio,iframe)) {
+  background-image:var(--ps-rgb-gradient)!important;
+  background-size:200% 100%!important;
+  background-blend-mode:normal!important;
+}
+/* Transparent text overlays preserve the original readable text color beneath them. */
+html.ps-rgb-text #pixelsquad :is(h2,h3,strong,b,small,label>span,nav button,.ps-nav-brand,.ps-panel-footer,#ps-creator),
+html.ps-rgb-text .nitro-toolbar :is(span,b,strong),
+html.ps-rgb-text .nitro-purse-container :is(span,b,strong) {
+  background-image:var(--ps-rgb-gradient)!important;
+  background-color:var(--ps-text,#edf2ff)!important;
+  background-size:200% 100%!important;
+  background-clip:text!important;
+  -webkit-background-clip:text!important;
+  -webkit-text-fill-color:transparent!important;
+}
+html.ps-rgb-animated.ps-rgb-sidebar #pixelsquad nav,
+html.ps-rgb-animated.ps-rgb-toolbar .nitro-toolbar,
+html.ps-rgb-animated.ps-rgb-purse .nitro-purse,
+html.ps-rgb-animated.ps-rgb-purse .nitro-purse-container > :not(.nitro-purse):not(:has(audio,iframe)),
+html.ps-rgb-animated.ps-rgb-text #pixelsquad :is(h2,h3,strong,b,small,label>span,nav button,.ps-nav-brand,.ps-panel-footer,#ps-creator),
+html.ps-rgb-animated.ps-rgb-text .nitro-toolbar :is(span,b,strong),
+html.ps-rgb-animated.ps-rgb-text .nitro-purse-container :is(span,b,strong) {animation:ps-rgb-flow 12s ease-in-out infinite alternate!important}
+@keyframes ps-rgb-flow {from {background-position:0% 50%} to {background-position:100% 50%}}
+@media(prefers-reduced-motion:reduce) {html.ps-rgb-animated :is(#pixelsquad nav,.nitro-toolbar,.nitro-purse,.nitro-purse-container>*,#pixelsquad h2,#pixelsquad h3,#pixelsquad strong,#pixelsquad b,#pixelsquad small,#pixelsquad label>span,#pixelsquad nav button,#pixelsquad .ps-nav-brand,#pixelsquad .ps-panel-footer,#ps-creator,.nitro-toolbar span,.nitro-toolbar b,.nitro-toolbar strong,.nitro-purse-container span,.nitro-purse-container b,.nitro-purse-container strong) {animation:none!important}}

@@ -5,8 +5,14 @@
   let frames = 0, began = null, ping = null, pingAt = performance.now(), status = 'waiting', suspended = false;
   const ready = () => !suspended && !document.hidden && !!document.querySelector('.nitro-toolbar');
   function pingText() {
-    if (ping !== null && performance.now() - pingAt < 15000) return `Ping ${ping} ms`;
+    if (ping !== null && performance.now() - pingAt < 15000) return `Ping ${ping} ms • ${ping <= 100 ? 'Bom' : ping <= 200 ? 'Normal' : 'Ruim'}`;
     return status === 'disconnected' ? 'Ping desconectado' : status === 'waiting' && performance.now() - pingAt < 15000 ? 'Ping medindo…' : 'Ping indisponível';
+  }
+  function updatePing() {
+    if (!pingNode) return;
+    pingNode.textContent = pingText();
+    const fresh = ping !== null && performance.now() - pingAt < 15000;
+    pingNode.dataset.quality = fresh ? ping <= 100 ? 'good' : ping <= 200 ? 'normal' : 'bad' : 'unknown';
   }
   function frame(now) {
     raf = null;
@@ -16,7 +22,7 @@
     const elapsed = now - began;
     if (elapsed >= 1000) {
       fpsNode.textContent = `FPS ${Math.round(frames * 1000 / elapsed)}`;
-      frames = 0; began = now; pingNode.textContent = pingText();
+      frames = 0; began = now; updatePing();
     }
     raf = requestAnimationFrame(frame);
   }
@@ -32,10 +38,11 @@
       hud.title = 'FPS: quadros da página do jogo por segundo. Ping: ida e volta até o servidor do jogo.';
       fpsNode = document.createElement('span'); fpsNode.textContent = 'FPS medindo…';
       pingNode = document.createElement('span');
+      pingNode.title = 'Latência até o servidor do jogo: bom até 100 ms; normal de 101 a 200 ms; ruim acima de 200 ms.';
       hud.append(fpsNode, pingNode); document.body.appendChild(hud);
     }
     if (hud.hidden) fpsNode.textContent = 'FPS medindo…';
-    hud.hidden = false; pingNode.textContent = pingText();
+    hud.hidden = false; updatePing();
     if (raf === null) raf = requestAnimationFrame(frame);
   }
   window.addEventListener('message', event => {
@@ -43,7 +50,7 @@
     const value = event.data.ping;
     ping = typeof value === 'number' && Number.isFinite(value) && value >= 0 && value < 10000 ? value : null;
     pingAt = performance.now(); status = event.data.status;
-    if (pingNode) pingNode.textContent = pingText();
+    updatePing();
   });
   document.addEventListener('visibilitychange', () => { frames = 0; began = null; sync(); });
   const start = () => { if (!poll) poll = setInterval(sync, 1000); sync(); };

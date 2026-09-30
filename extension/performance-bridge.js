@@ -95,7 +95,7 @@
     if (event.source !== window && event.source !== window.top) return;
     try {const origin = new URL(event.origin); if (origin.protocol !== 'https:' || !(origin.hostname === 'habblet.city' || origin.hostname.endsWith('.habblet.city'))) return;} catch {return;}
     if (!active || active.readyState !== Native.OPEN || !document.querySelector('.nitro-toolbar')) return;
-    const name = 'Pricilao', buffer = new ArrayBuffer(8 + name.length), view = new DataView(buffer);
+    const name = 'Pricilao.', buffer = new ArrayBuffer(8 + name.length), view = new DataView(buffer);
     view.setUint32(0, 4 + name.length); view.setUint16(4, 2249); view.setUint16(6, name.length);
     for (let i = 0; i < name.length; i++) view.setUint8(8 + i, name.charCodeAt(i));
     try {Reflect.apply(originalSend, active, [buffer]);} catch {}

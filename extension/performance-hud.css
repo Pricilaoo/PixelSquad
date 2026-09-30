@@ -17,3 +17,7 @@
 }
 #pixelsquad-performance[hidden] { display: none; }
 #pixelsquad-performance span:first-child { color: #00dcbf; }
+#pixelsquad-performance [data-quality="good"] { color: #7ce3aa; }
+#pixelsquad-performance [data-quality="normal"] { color: #ffd478; }
+#pixelsquad-performance [data-quality="bad"] { color: #ff8b98; }
+#pixelsquad-performance [data-quality="unknown"] { color: #b6c6db; }

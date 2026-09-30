@@ -326,3 +326,6 @@
 #pixelsquad .ps-home-shortcuts button[hidden]{display:none}
 #pixelsquad .ps-shortcut-icon{font-size:26px;color:var(--ps-accent)}
 #pixelsquad .ps-home-shortcuts small{font-size:11px;opacity:.7}
+#pixelsquad .ps-item-star {position:absolute;right:7px;top:7px;z-index:3;padding:4px 6px;border:0;border-radius:6px;background:var(--ps-panel);color:var(--ps-accent);cursor:pointer;font-size:20px;line-height:1}
+#pixelsquad .ps-item-star[aria-pressed="true"] {color:#ffc95d}
+#pixelsquad #ps-item-favorites[aria-pressed="true"] {border-color:var(--ps-accent);color:var(--ps-accent)}

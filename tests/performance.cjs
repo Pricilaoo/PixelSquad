@@ -40,8 +40,8 @@ const reconnect = new win.WebSocket(); reconnect.send(packet(2596)); reconnect.e
 tick(); assert.equal(reconnect.sent.length, 2);
 events.message({source:win,origin:'https://www.habblet.city',data:{source:'pixelsquad',type:'PS_OPEN_CREATOR'}});
 const profile = new DataView(reconnect.sent.at(-1));
-assert.equal(profile.getUint16(4),2249); assert.equal(profile.getUint16(6),8);
-assert.equal(String.fromCharCode(...new Uint8Array(reconnect.sent.at(-1),8)),'Pricilao');
+assert.equal(profile.getUint16(4),2249); assert.equal(profile.getUint16(6),9);
+assert.equal(String.fromCharCode(...new Uint8Array(reconnect.sent.at(-1),8)),'Pricilao.');
 const profileCount = reconnect.sent.length;
 events.message({source:{},origin:'https://other.example',data:{source:'pixelsquad',type:'PS_OPEN_CREATOR'}});
 assert.equal(reconnect.sent.length,profileCount);
@@ -61,8 +61,13 @@ for (let i = 0; i <= 60; i++) frame(i * 1000 / 60);
 const hud = dom.document.querySelector('#pixelsquad-performance'); assert.equal(hud.firstChild.textContent, 'FPS 60');
 const event = new dom.Event('message'); Object.assign(event, {source: dom, origin: 'https://www.habblet.city',
   data: {source: 'pixelsquad-performance', ping: 42, status: 'connected'}}); dom.dispatchEvent(event);
-assert.equal(hud.lastChild.textContent, 'Ping 42 ms');
+assert.equal(hud.lastChild.textContent, 'Ping 42 ms • Bom');
+for (const [ping, label, quality] of [[0,'Bom','good'],[100,'Bom','good'],[101,'Normal','normal'],[200,'Normal','normal'],[201,'Ruim','bad']]) {
+ const sample = new dom.Event('message'); Object.assign(sample, {source:dom,origin:'https://www.habblet.city',data:{source:'pixelsquad-performance',ping,status:'connected'}});
+ dom.dispatchEvent(sample); assert.equal(hud.lastChild.textContent,`Ping ${ping} ms • ${label}`); assert.equal(hud.lastChild.dataset.quality,quality);
+}
 now += 16000; [...hudTicks.values()].forEach(f => f()); assert.equal(hud.lastChild.textContent, 'Ping indisponível');
+assert.equal(hud.lastChild.dataset.quality,'unknown');
 hidden = true; dom.document.dispatchEvent(new dom.Event('visibilitychange')); assert(hud.hidden); assert.equal(callbacks.size, 0);
 hidden = false; dom.document.dispatchEvent(new dom.Event('visibilitychange')); assert(!hud.hidden); assert.equal(callbacks.size, 1);
 dom.dispatchEvent(new dom.Event('pagehide')); assert.equal(callbacks.size, 0); assert.equal(hudTicks.size, 0);

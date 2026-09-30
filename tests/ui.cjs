@@ -46,6 +46,19 @@ f.open();assert.equal(f.document.querySelector('#pixelsquad').style.getPropertyV
 f.document.querySelector('#ps-close').click();assert.equal(f.resize.size,0);
 console.log('PASS: corrupt preferences, retired tab migration, tab rendering, nine appearance controls, persistence and drag-listener cleanup');
 
+const catalogFixture=fixture();catalogFixture.run('effects-catalog.js');catalogFixture.run('locales.js');catalogFixture.run('content.js');catalogFixture.open();
+catalogFixture.document.querySelector('[data-tab=enables]').click();
+assert.equal(catalogFixture.document.querySelectorAll('.enable-card').length,465);
+catalogFixture.document.querySelector('[data-item-favorite="enable:1"]').click();
+catalogFixture.document.querySelector('#ps-item-favorites').click();
+assert.equal(catalogFixture.document.querySelectorAll('.enable-card').length,1);
+assert(JSON.parse(catalogFixture.store.get('pixelsquad_state')).itemFavorites.includes('enable:1'));
+catalogFixture.document.querySelector('#ps-item-favorites').click();
+const search=catalogFixture.document.querySelector('#ps-enable-search');search.value='Jetpack';search.oninput();
+assert.equal(catalogFixture.document.querySelectorAll('.enable-card').length,1);
+assert.equal(catalogFixture.document.querySelector('[data-item-id]').dataset.itemId,'6');
+console.log('PASS: 465 copied catalog items, favorite filter/persistence, name search and original effect IDs');
+
 f=fixture({pixelsquad_music_player:'null'},'<div id="area_player"><button id="pause">Pause</button><input id="volume" type="range"><span data-song-title="Faixa de teste"></span><span data-origin-room="Sala de teste"></span></div>');
 const native=f.document.querySelector('#pause');let clicked=0;native.addEventListener('click',()=>clicked++);
 f.run('music-player.js');assert.equal(f.intervals.size,1);
