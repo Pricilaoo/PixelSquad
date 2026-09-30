@@ -1,15 +1,17 @@
 {
   "manifest_version": 3,
   "name": "PixelSquad",
-  "version": "0.4.2",
-  "description": "Ferramentas de construção, Wired e automação de interface para Habblet. Criado por Pricilao. Logo PixelSquad.",
+  "version": "0.5.0",
+  "description": "Ferramentas de construção, Wired, Enables e Handitems para Habblet. Criado por Pricilao.",
   "permissions": [
     "storage",
     "activeTab"
   ],
   "host_permissions": [
     "https://www.habblet.city/*",
-    "https://*.habblet.city/*"
+    "https://*.habblet.city/*",
+    "https://www.toolsblet.in/*",
+    "https://toolsblet.in/*"
   ],
   "action": {
     "default_title": "PixelSquad",
@@ -27,6 +29,16 @@
       ],
       "css": [
         "content.css"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://www.toolsblet.in/enables*",
+        "https://toolsblet.in/enables*"
+      ],
+      "js": [
+        "toolsblet-importer.js"
       ],
       "run_at": "document_idle"
     }
