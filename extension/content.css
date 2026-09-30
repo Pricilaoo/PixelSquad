@@ -24,3 +24,15 @@
 #pixelsquad-toast.show{opacity:1;transform:translate(-50%,0)}
 #pixelsquad hr{border:0;border-top:1px solid #30394e;margin:18px 0}
 @media(max-width:600px){#pixelsquad .box{width:calc(100vw - 30px);padding:12px}#pixelsquad .grid,#pixelsquad .tools,#pixelsquad .effectgrid{grid-template-columns:1fr}}
+
+#pixelsquad .row{display:flex;gap:10px;align-items:center;justify-content:space-between}
+#pixelsquad .row input{flex:1;min-width:180px}
+#pixelsquad .enable-actions{display:flex;align-items:center;gap:10px;margin:8px 0}
+#pixelsquad .enablegrid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:10px}
+#pixelsquad .enable-card{background:#192133;border:1px solid #303d58;border-radius:10px;padding:9px;min-width:0}
+#pixelsquad .enable-card img{display:block;width:100%;height:82px;object-fit:contain;background:#0b0f18;border-radius:7px}
+#pixelsquad .enable-info strong{display:block;margin-top:7px;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pixelsquad .enable-info b{display:block;color:#00dcbf;font-size:12px;margin:3px 0}
+#pixelsquad .enable-info button{width:100%;font-size:10px;padding:7px}
+@media(max-width:760px){#pixelsquad .enablegrid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:560px){#pixelsquad .enablegrid{grid-template-columns:repeat(2,1fr)}}
