@@ -19,7 +19,7 @@ class Socket {
 const win = {WebSocket: Socket, addEventListener: (type, f) => events[type] = f, postMessage: data => messages.push(data)};
 const context = vm.createContext({window: win, document: {get hidden() {return !visible}, querySelector: () => game},
   location: {origin: 'https://www.habblet.city'}, performance: {now: () => now}, ArrayBuffer, Uint8Array, DataView, Blob,
-  Proxy, Reflect, setInterval: f => {ticks.set(++counter, f); return counter}, clearInterval: id => ticks.delete(id)});
+  Proxy, Reflect, URL, setInterval: f => {ticks.set(++counter, f); return counter}, clearInterval: id => ticks.delete(id)});
 vm.runInContext(fs.readFileSync(root + '/performance-bridge.js', 'utf8'), context);
 const tick = () => [...ticks.values()].forEach(f => f());
 const unrelated = new win.WebSocket(); unrelated.send(packet(123)); tick(); assert.equal(unrelated.sent.length, 1);
@@ -38,6 +38,13 @@ events.pagehide(); assert.equal(ticks.size, 0); events.pageshow(); assert.equal(
 // Blob decoding can complete after native pong was already sent.
 const reconnect = new win.WebSocket(); reconnect.send(packet(2596)); reconnect.emit('message', packet(3928));
 tick(); assert.equal(reconnect.sent.length, 2);
+events.message({source:win,origin:'https://www.habblet.city',data:{source:'pixelsquad',type:'PS_OPEN_CREATOR'}});
+const profile = new DataView(reconnect.sent.at(-1));
+assert.equal(profile.getUint16(4),2249); assert.equal(profile.getUint16(6),8);
+assert.equal(String.fromCharCode(...new Uint8Array(reconnect.sent.at(-1),8)),'Pricilao');
+const profileCount = reconnect.sent.length;
+events.message({source:{},origin:'https://other.example',data:{source:'pixelsquad',type:'PS_OPEN_CREATOR'}});
+assert.equal(reconnect.sent.length,profileCount);
 console.log('PASS: correlated game RTT, unknown socket isolation, native socket semantics, timeout, hidden page and reconnection');
 
 const {window: dom} = parseHTML('<html><body><div class="nitro-toolbar"></div></body></html>');

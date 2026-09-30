@@ -25,6 +25,8 @@
     const s = states.get(socket);
     if (!s) return;
     packets(data, (header, id, size) => {
+      // Nitro's authenticated message identifies the game socket before its first heartbeat.
+      if (header === 2491 && size === 2 && active !== socket) { active = socket; emit(null, 'waiting'); }
       if (header === 3928 && size === 2) {
         s.heartbeat = arrived;
         if (Math.abs(s.pongAt - arrived) < 5000 && active !== socket) {
@@ -87,6 +89,17 @@
     catch { s.pending = null; emit(null, 'disconnected'); }
   }
   function start() { if (!timer) timer = setInterval(tick, 5000); }
+  // The native profile view opens on the response to USER_PROFILE_BY_NAME (2249).
+  window.addEventListener('message', event => {
+    if (event.data?.source !== 'pixelsquad' || event.data.type !== 'PS_OPEN_CREATOR') return;
+    if (event.source !== window && event.source !== window.top) return;
+    try {const origin = new URL(event.origin); if (origin.protocol !== 'https:' || !(origin.hostname === 'habblet.city' || origin.hostname.endsWith('.habblet.city'))) return;} catch {return;}
+    if (!active || active.readyState !== Native.OPEN || !document.querySelector('.nitro-toolbar')) return;
+    const name = 'Pricilao', buffer = new ArrayBuffer(8 + name.length), view = new DataView(buffer);
+    view.setUint32(0, 4 + name.length); view.setUint16(4, 2249); view.setUint16(6, name.length);
+    for (let i = 0; i < name.length; i++) view.setUint8(8 + i, name.charCodeAt(i));
+    try {Reflect.apply(originalSend, active, [buffer]);} catch {}
+  });
   window.addEventListener('pagehide', () => { suspended = true; clearInterval(timer); timer = null; });
   window.addEventListener('pageshow', () => { suspended = false; if (active) states.get(active).pending = null; start(); });
   start();

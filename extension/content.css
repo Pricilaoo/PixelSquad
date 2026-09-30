@@ -292,3 +292,37 @@
 }
 #pixelsquad :is(h2, header strong) { font-size: calc(19px * var(--ps-scale)) !important; }
 #pixelsquad :is(label, input, select, textarea, .tools button, .card strong) { color: var(--ps-text) !important; }
+
+#pixelsquad-launch{touch-action:none!important;user-select:none!important;-webkit-user-select:none!important}
+#pixelsquad-launch img{pointer-events:none!important;-webkit-user-drag:none!important}
+
+/* Compact app window: sidebar, separate content header and creator footer. */
+#pixelsquad .box {box-sizing:border-box!important;width:490px!important;max-width:calc(100vw - 24px)!important;height:min(640px,calc(100vh - 80px))!important;padding:0!important;overflow:hidden!important;left:calc(50vw - 245px)!important;border:1px solid color-mix(in srgb,var(--ps-accent) 25%,transparent)!important;border-radius:var(--ps-radius)!important}
+#pixelsquad header {padding:16px!important;min-width:0;border-bottom:1px solid color-mix(in srgb,var(--ps-accent) 20%,transparent);touch-action:none}
+#pixelsquad header strong {font-size:calc(15px * var(--ps-scale))!important}
+#pixelsquad header small {font-size:10px!important;line-height:1.4}
+#pixelsquad #ps-main {overflow:auto;padding:16px;scrollbar-width:thin;min-height:0}
+#pixelsquad nav {padding:8px;margin:0!important;background:var(--ps-panel)!important}
+#pixelsquad nav button {border-radius:10px!important;border-color:transparent!important;background:transparent!important;padding:10px 8px!important}
+#pixelsquad nav button.active {background:color-mix(in srgb,var(--ps-accent) 16%,var(--ps-panel))!important;border-color:color-mix(in srgb,var(--ps-accent) 50%,transparent)!important;color:var(--ps-accent)!important}
+#pixelsquad .ps-nav-brand {padding:12px 5px;font-size:12px;font-weight:800;color:var(--ps-accent)}
+#pixelsquad .ps-panel-footer {display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;padding:10px;border-top:1px solid color-mix(in srgb,var(--ps-accent) 20%,transparent);font-size:11px;background:var(--ps-panel);color:var(--ps-text)}
+#pixelsquad .ps-panel-footer span {flex-basis:100%;text-align:center;font-size:10px;opacity:.7}
+#pixelsquad #ps-creator {background:color-mix(in srgb,var(--ps-accent) 14%,var(--ps-panel));border:1px solid color-mix(in srgb,var(--ps-accent) 45%,transparent);border-radius:999px;padding:4px 10px;color:var(--ps-accent);cursor:pointer;font-weight:700}
+#pixelsquad #ps-creator:focus-visible {outline:2px solid var(--ps-accent);outline-offset:2px}
+#pixelsquad.ps-sidebar .box {display:grid!important;grid-template-columns:112px minmax(0,1fr)!important;grid-template-rows:auto minmax(0,1fr) auto!important;gap:0!important;padding:0!important}
+#pixelsquad.ps-sidebar header {grid-column:2!important;grid-row:1}
+#pixelsquad.ps-sidebar nav {grid-column:1!important;grid-row:1/4!important;position:static!important;align-self:stretch!important;overflow:auto;max-height:none!important;border-right:1px solid color-mix(in srgb,var(--ps-accent) 20%,transparent)}
+#pixelsquad.ps-sidebar #ps-main {grid-column:2;grid-row:2}
+#pixelsquad.ps-sidebar .ps-panel-footer {grid-column:2;grid-row:3}
+#pixelsquad:not(.ps-sidebar) .box {display:flex!important;flex-direction:column!important}
+#pixelsquad:not(.ps-sidebar) #ps-main {flex:1;min-height:0}
+#pixelsquad .grid article,#pixelsquad .hero {border-radius:12px!important}
+#pixelsquad .drag {cursor:grab!important}
+@media(max-width:600px){#pixelsquad .box {left:12px!important;right:auto!important;width:calc(100vw - 24px)!important;max-width:calc(100vw - 24px)!important}#pixelsquad.ps-sidebar .box {grid-template-columns:96px minmax(0,1fr)!important}#pixelsquad.ps-sidebar nav {flex-direction:column!important}#pixelsquad header,#pixelsquad #ps-main {padding:12px!important}}
+#pixelsquad .box.ps-custom-position {left:var(--ps-left)!important;top:var(--ps-top)!important}
+
+#pixelsquad .ps-home-shortcuts button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:120px;padding:14px;background:var(--ps-panel);color:var(--ps-text);border:1px solid color-mix(in srgb,var(--ps-accent) 25%,transparent);border-radius:12px;cursor:pointer}
+#pixelsquad .ps-home-shortcuts button[hidden]{display:none}
+#pixelsquad .ps-shortcut-icon{font-size:26px;color:var(--ps-accent)}
+#pixelsquad .ps-home-shortcuts small{font-size:11px;opacity:.7}

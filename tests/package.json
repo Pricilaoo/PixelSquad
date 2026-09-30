@@ -1,5 +1,5 @@
 {
   "private": true,
-  "scripts": { "test": "node loading.cjs && node ui.cjs && node performance.cjs && node avatar.cjs" },
+  "scripts": { "test": "node loading.cjs && node ui.cjs && node performance.cjs && node avatar.cjs && node launcher.cjs" },
   "devDependencies": { "linkedom": "0.18.13" }
 }
