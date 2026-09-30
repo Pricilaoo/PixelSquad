@@ -1,5 +1,5 @@
 const open=document.getElementById("open"),imp=document.getElementById("import"),status=document.getElementById("status"),count=document.getElementById("count");
 async function refresh(){try{const r=await chrome.storage.local.get(["pixelsquad_enables"]);count.textContent="Itens importados: "+((r.pixelsquad_enables||[]).length);}catch{}}
-open.onclick=async()=>{try{const[t]=await chrome.tabs.query({active:true,currentWindow:true});if(!t?.id||!/^https:\/\/(www\.)?habblet\.city\//i.test(t.url||"")){status.textContent="Abra o Habblet primeiro.";return}await chrome.tabs.sendMessage(t.id,{type:"openPanel"});window.close()}catch(e){status.textContent="Recarregue a extensão e a página do Habblet.";}}};
+open.onclick=async()=>{try{const[t]=await chrome.tabs.query({active:true,currentWindow:true});if(!t?.id||!/^https:\/\/(www\.)?habblet\.city\//i.test(t.url||"")){status.textContent="Abra o Habblet primeiro.";return}await chrome.tabs.sendMessage(t.id,{type:"openPanel"});window.close()}catch(e){status.textContent="Recarregue a extensão e a página do Habblet.";}}
 imp.onclick=async()=>{status.textContent="Abrindo ToolsBlet e importando...";await chrome.tabs.create({url:"https://www.toolsblet.in/enables"});setTimeout(refresh,7000);};
 refresh();
