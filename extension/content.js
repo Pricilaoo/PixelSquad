@@ -104,5 +104,5 @@ window.addEventListener("pixelsquad-language-change",()=>{if(document.getElement
 document.addEventListener("keydown",e=>{if(e.shiftKey&&e.key.toLowerCase()==="b"){e.preventDefault();panel()}});
 try{chrome.storage.local.get(["pixelsquad_enables"]).then(r=>{S.enables=Array.isArray(r.pixelsquad_enables)?r.pixelsquad_enables:[];if(document.getElementById("pixelsquad"))render()})}catch{}
 try{chrome.runtime.onMessage.addListener(m=>{if(m?.type==="openPanel")panel()})}catch{}
-const launch=document.createElement("button");launch.id="pixelsquad-launch";launch.title="PixelSquad";launch.innerHTML='<img src="'+chrome.runtime.getURL("icons/icon128.png")+'" alt="PixelSquad">';launch.onclick=panel;document.documentElement.appendChild(launch);
+const launch=document.createElement("button");launch.id="pixelsquad-launch";launch.title="PixelSquad";launch.setAttribute("aria-label","Abrir PixelSquad");const logo=document.createElement("img");logo.alt="PixelSquad";logo.src=chrome.runtime.getURL("icons/pixelsquad-logo.svg");logo.onerror=()=>{logo.onerror=null;logo.src=chrome.runtime.getURL("icons/icon128.png")};launch.appendChild(logo);launch.onclick=panel;document.documentElement.appendChild(launch);
 })();
