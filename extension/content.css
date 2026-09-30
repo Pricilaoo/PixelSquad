@@ -205,3 +205,32 @@
 /* Tradução simultânea */
 .pixelsquad-translation{display:flex!important;flex-direction:column!important;gap:2px!important;margin-top:3px!important;padding:3px 6px!important;border-left:2px solid #00dcbf!important;background:#0b1320!important;color:#dff!important;font-size:.92em!important;line-height:1.25!important;border-radius:3px!important}
 .pixelsquad-translation-original{font-size:.8em!important;color:#8290a9!important;font-style:italic!important}
+
+
+/* Painel totalmente reposicionável pelo usuário */
+#pixelsquad .box.ps-custom-position{
+  left:var(--ps-left)!important;
+  top:var(--ps-top)!important;
+  bottom:auto!important;
+  right:auto!important;
+}
+#pixelsquad .box.ps-custom-position .drag{
+  cursor:grabbing!important;
+}
+#pixelsquad .box:not(.ps-custom-position) .drag{
+  cursor:grab!important;
+}
+#pixelsquad .panel-position-settings{
+  margin-top:16px;
+  padding:12px;
+  background:#192133;
+  border:1px solid #303d58;
+  border-radius:10px;
+}
+#pixelsquad .panel-position-settings>b{display:block;color:#edf2ff;font-size:13px}
+#pixelsquad .panel-position-settings .muted{margin-top:6px}
+@media(max-width:600px){
+  #pixelsquad .box.ps-custom-position{
+    max-width:calc(100vw - 16px)!important;
+  }
+}
