@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "PixelSquad",
-  "version": "0.5.3.2",
+  "version": "0.5.3.3",
   "description": "Painel unificado de construção, Wired, visuais, chat, tradução, Enables e Handitems para Habblet. Criado por Pricilao.",
   "permissions": [
     "storage",
@@ -64,6 +64,16 @@
       "matches": [
         "https://www.toolsblet.in/enables*",
         "https://toolsblet.in/enables*"
+      ],
+      "js": [
+        "toolsblet-importer.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://www.toolsblet.in/handitems*",
+        "https://toolsblet.in/handitems*"
       ],
       "js": [
         "toolsblet-importer.js"
