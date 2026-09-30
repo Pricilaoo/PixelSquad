@@ -38,7 +38,6 @@
         "https://*.habblet.city/*"
       ],
       "js": [
-        "main-bridge.js",
         "locales.js",
         "content.js"
       ],
