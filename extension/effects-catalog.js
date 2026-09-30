@@ -1,4 +1,4 @@
-// Catalog supplied by the user. Original preview image URLs are retained.
+// User-supplied catalog. Preview URLs retained from the reference HTML.
 // PixelSquad adaptation by Pricilao.
 window.PixelSquadDefaultEnables = [
   {

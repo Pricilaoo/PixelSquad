@@ -74,6 +74,7 @@
         "avatar-generator.js",
         "launcher.js",
         "effects-catalog.js",
+        "handitems-catalog.js",
         "content.js"
       ],
       "css": [

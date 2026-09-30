@@ -1,0 +1,34 @@
+name: Validate PixelSquad item catalogs
+
+on:
+  push:
+    branches: ['draft/handitems-cleanup-05315']
+    paths:
+      - 'extension/**'
+      - 'tests/**'
+      - 'referencias/html/**'
+      - '.github/workflows/validate-item-catalog.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout draft
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate JavaScript syntax
+        run: |
+          for file in extension/*.js tests/*.cjs; do
+            node --check "$file"
+          done
+      - name: Install test dependencies
+        run: npm install --prefix tests --ignore-scripts --no-audit --no-fund
+      - name: Validate UI, catalogs and existing features
+        run: npm test --prefix tests

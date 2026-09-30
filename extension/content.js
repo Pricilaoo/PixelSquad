@@ -1,8 +1,10 @@
 (()=>{if(window.__PIXELSQUAD__)return;window.__PIXELSQUAD__=true;
 const KEY="pixelsquad_state";let stored={};try{const value=JSON.parse(localStorage.getItem(KEY)||"{}");if(value&&typeof value==="object"&&!Array.isArray(value))stored=value}catch{}
 let panelDragCleanup=null;
-const S={tab:stored.tab==="effects"?"home":stored.tab||"home",enables:Array.isArray(window.PixelSquadDefaultEnables)?window.PixelSquadDefaultEnables:[],handitems:[],itemFavorites:Array.isArray(stored.itemFavorites)?stored.itemFavorites:[],height:Number(stored.height)||0,direction:Number(stored.direction)||0,favorites:Array.isArray(stored.favorites)?stored.favorites:[],history:Array.isArray(stored.history)?stored.history:[],lastAction:"",custom:{accent:stored.custom?.accent||"#00dcbf",background:stored.custom?.background||"#111725",panel:stored.custom?.panel||"#151d2e",text:stored.custom?.text||"#edf2ff",opacity:Number(stored.custom?.opacity)||96,radius:Number(stored.custom?.radius??14),scale:Number(stored.custom?.scale)||100,compact:!!stored.custom?.compact,sidebar:stored.custom?.sidebar!==false}};
-function enablesList(items){const rows=new Map((window.PixelSquadDefaultEnables||[]).map(x=>[String(x.id),x]));for(const x of Array.isArray(items)?items:[])rows.set(String(x.id),x);return [...rows.values()]}
+const S={tab:stored.tab==="effects"?"home":stored.tab||"home",enables:Array.isArray(window.PixelSquadDefaultEnables)?window.PixelSquadDefaultEnables:[],handitems:Array.isArray(window.PixelSquadDefaultHanditems)?window.PixelSquadDefaultHanditems:[],itemFavorites:Array.isArray(stored.itemFavorites)?stored.itemFavorites:[],height:Number(stored.height)||0,direction:Number(stored.direction)||0,favorites:Array.isArray(stored.favorites)?stored.favorites:[],history:Array.isArray(stored.history)?stored.history:[],lastAction:"",custom:{accent:stored.custom?.accent||"#00dcbf",background:stored.custom?.background||"#111725",panel:stored.custom?.panel||"#151d2e",text:stored.custom?.text||"#edf2ff",opacity:Number(stored.custom?.opacity)||96,radius:Number(stored.custom?.radius??14),scale:Number(stored.custom?.scale)||100,compact:!!stored.custom?.compact,sidebar:stored.custom?.sidebar!==false}};
+function itemCollection(defaults,items){const rows=new Map((defaults||[]).map(x=>[String(x.id),x]));for(const x of Array.isArray(items)?items:[]){if(!x||!(typeof x.id==="number"||typeof x.id==="string"&&/^\d+$/.test(x.id))||!Number.isSafeInteger(Number(x.id))||Number(x.id)<0)continue;const key=String(Number(x.id)),current=rows.get(key);rows.set(key,current?{...x,...current}:{id:Number(x.id),name:String(x.name||"Item"),image:typeof x.image==="string"&&/^https:\/\//.test(x.image)?x.image:""})}return [...rows.values()]}
+function enablesList(items){return itemCollection(window.PixelSquadDefaultEnables,items)}
+function handitemsList(items){return itemCollection(window.PixelSquadDefaultHanditems,items)}
 const wired=[["Ativadores","Entrada no quarto","Gatilho quando alguém entra"],["Ativadores","Periodicamente","Executa em intervalo"],["Efeitos","Super Wired","Executa configurações do Super Wired"],["Efeitos","Mudar estado","Altera o estado de mobis selecionados"],["Efeitos","Teleporte aleatório","Espalha mobis em outro mobi"],["Condições","Badge","Verifica emblema"],["Condições","Direitos","Verifica direitos"],["Condições","VIP","Verifica VIP"],["Condições","Grupo","Verifica grupo"],["Condições","Nome","Compara nome"],["Seletores","Mobis","Seleciona mobis"],["Seletores","Usuários","Seleciona usuários"]];
 const commands=["enable","fastwalk","handitem","pullmode","pushmode","diagonal","kickpower","sit","lay","lock","roommute","walkthrough","clickthrough","addpoint","removepoint","setpoint","moonwalk","player:stand","tag","removetag","showgroupforum","randomstate","randomteleport","badge","nobadge","hasrights","norights","hasvip","novip","gender","groupmember","nogroupmember","nohanditem","mission","nomission","username","copiar","bfloor","up","spin","state","wired","autofloor","tile","pyramid","eject","playtest","abracar","push","pull","kis","soco","quickpoll","ativar","desativar","setmax","tele","aus","afk","random","habbletname","setspeed","blockroom","floor","bcfloor","pickall","pickwired"];
 const esc=x=>String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -64,30 +66,41 @@ const tabs=[["home","⌂"],["avatar","👤"],["build","▦"],["visuals","👕"],
 function drag(root){const box=root.querySelector(".box"),h=root.querySelector(".drag"),POSKEY="pixelsquad_panel_position";let on=false,ox=0,oy=0;let saved=null;try{saved=JSON.parse(localStorage.getItem(POSKEY)||"null")}catch{};const applyPosition=pos=>{if(!pos||!Number.isFinite(Number(pos.x))||!Number.isFinite(Number(pos.y)))return;box.classList.add("ps-custom-position");box.style.setProperty("--ps-left",Math.round(pos.x)+"px");box.style.setProperty("--ps-top",Math.round(pos.y)+"px")};if(saved)applyPosition(saved);const clamp=()=>{if(!box.classList.contains("ps-custom-position"))return;const r=box.getBoundingClientRect();const x=Math.max(8,Math.min(innerWidth-r.width-8,r.left));const y=Math.max(8,Math.min(innerHeight-r.height-8,r.top));applyPosition({x,y});localStorage.setItem(POSKEY,JSON.stringify({x:Math.round(x),y:Math.round(y)}))};h.onpointerdown=e=>{if(e.target.closest("button"))return;on=true;const r=box.getBoundingClientRect();ox=e.clientX-r.left;oy=e.clientY-r.top;box.classList.add("ps-custom-position");h.setPointerCapture?.(e.pointerId)};h.onpointermove=e=>{if(!on)return;const x=Math.max(8,Math.min(innerWidth-box.offsetWidth-8,e.clientX-ox));const y=Math.max(8,Math.min(innerHeight-box.offsetHeight-8,e.clientY-oy));box.style.setProperty("--ps-left",Math.round(x)+"px");box.style.setProperty("--ps-top",Math.round(y)+"px")};const finish=()=>{if(!on)return;on=false;const r=box.getBoundingClientRect();const x=Math.max(8,Math.min(innerWidth-r.width-8,r.left));const y=Math.max(8,Math.min(innerHeight-r.height-8,r.top));applyPosition({x,y});localStorage.setItem(POSKEY,JSON.stringify({x:Math.round(x),y:Math.round(y)}));toast("Posição do painel salva")};h.onpointerup=finish;h.onpointercancel=finish;window.addEventListener("resize",clamp);panelDragCleanup=()=>window.removeEventListener("resize",clamp);h.title="Arraste para mover o painel";h.ondblclick=()=>{box.classList.remove("ps-custom-position");box.style.removeProperty("--ps-left");box.style.removeProperty("--ps-top");localStorage.removeItem(POSKEY);toast("Posição restaurada")}}
 
 function resizePanel(root){
- const box=root.querySelector(".box"),key="pixelsquad_panel_size";
- let saved=null;try{saved=JSON.parse(localStorage.getItem(key)||"null")}catch{}
- const apply=(width,height)=>{
-  width=Math.round(Math.max(Math.min(320,innerWidth-24),Math.min(innerWidth-24,width)));
-  height=Math.round(Math.max(Math.min(280,innerHeight-80),Math.min(innerHeight-80,height)));
-  box.style.setProperty("--ps-user-width",width+"px");box.style.setProperty("--ps-user-height",height+"px");
-  box.classList.add("ps-user-size");
-  box.style.setProperty("width",width+"px","important");box.style.setProperty("height",height+"px","important");
+ const box=root.querySelector(".box"),key="pixelsquad_panel_size",posKey="pixelsquad_panel_position";
+ const grip=document.createElement("button");grip.type="button";grip.className="ps-resize-grip";grip.textContent="↘";
+ grip.title="Arraste para aumentar ou diminuir. Use as setas para ajustar.";
+ grip.setAttribute("aria-label","Redimensionar painel");box.appendChild(grip);
+ let saved=null,drag=null;try{saved=JSON.parse(localStorage.getItem(key)||"null")}catch{}
+ const size=()=>box.getBoundingClientRect();
+ const save=()=>{const r=size();try{localStorage.setItem(key,JSON.stringify({width:Math.round(r.width),height:Math.round(r.height)}))}catch{}};
+ const anchor=()=>{
+  const r=size(),minW=Math.min(320,Math.max(24,innerWidth-24)),minH=Math.min(280,Math.max(24,innerHeight-24));
+  const x=Math.max(8,Math.min(Math.max(8,innerWidth-minW-8),r.left)),y=Math.max(8,Math.min(Math.max(8,innerHeight-minH-8),r.top));
+  box.classList.add("ps-custom-position");box.style.setProperty("--ps-left",Math.round(x)+"px");box.style.setProperty("--ps-top",Math.round(y)+"px");
+  try{localStorage.setItem(posKey,JSON.stringify({x,y}))}catch{}
  };
- if(Number.isFinite(saved?.width)&&Number.isFinite(saved?.height))apply(saved.width,saved.height);
- if(typeof ResizeObserver==="undefined")return;
- const observer=new ResizeObserver(()=>{
-  if(!box.isConnected)return;
-  const rect=box.getBoundingClientRect();
-  if(rect.width>0&&rect.height>0){
-   box.style.setProperty("--ps-user-width",Math.round(rect.width)+"px");
-   try{localStorage.setItem(key,JSON.stringify({width:Math.round(rect.width),height:Math.round(rect.height)}))}catch{}
-  }
- });
- observer.observe(box);
- const onResize=()=>{const r=box.getBoundingClientRect();apply(r.width,r.height)};
- window.addEventListener("resize",onResize);
- const prior=panelDragCleanup;
- panelDragCleanup=()=>{prior?.();observer.disconnect();window.removeEventListener("resize",onResize)};
+ const apply=(width,height)=>{
+  const r=size(),maxW=Math.max(24,innerWidth-r.left-8),maxH=Math.max(24,innerHeight-r.top-8);
+  width=Math.round(Math.max(Math.min(320,maxW),Math.min(maxW,width)));
+  height=Math.round(Math.max(Math.min(280,maxH),Math.min(maxH,height)));
+  box.style.setProperty("--ps-user-width",width+"px");box.style.setProperty("--ps-user-height",height+"px");
+  box.style.setProperty("width",width+"px","important");box.style.setProperty("height",height+"px","important");box.classList.add("ps-user-size");
+ };
+ if(Number.isFinite(saved?.width)&&Number.isFinite(saved?.height)){anchor();apply(saved.width,saved.height);}
+ grip.onpointerdown=e=>{
+  if(e.button!==0)return;e.preventDefault();anchor();const r=size();
+  drag={id:e.pointerId,x:e.clientX,y:e.clientY,width:r.width,height:r.height};grip.setPointerCapture?.(e.pointerId);
+ };
+ grip.onpointermove=e=>{if(drag?.id===e.pointerId){e.preventDefault();apply(drag.width+e.clientX-drag.x,drag.height+e.clientY-drag.y)}};
+ const finish=e=>{if(drag?.id!==e.pointerId)return;drag=null;save();if(grip.hasPointerCapture?.(e.pointerId))grip.releasePointerCapture(e.pointerId)};
+ grip.onpointerup=finish;grip.onpointercancel=finish;
+ grip.onlostpointercapture=()=>{if(drag){drag=null;save()}};
+ grip.onkeydown=e=>{
+  const deltas={ArrowRight:[1,0],ArrowLeft:[-1,0],ArrowDown:[0,1],ArrowUp:[0,-1]},delta=deltas[e.key];if(!delta)return;
+  e.preventDefault();anchor();const r=size(),step=e.shiftKey?40:10;apply(r.width+delta[0]*step,r.height+delta[1]*step);save();
+ };
+ const onResize=()=>{anchor();const r=size();apply(r.width,r.height);save()};window.addEventListener("resize",onResize);
+ const prior=panelDragCleanup;panelDragCleanup=()=>{prior?.();window.removeEventListener("resize",onResize)};
 }
 
 async function sendPanel(text){const v=String(text||"").trim();if(!v)return;const tr=window.PixelSquadTranslate,c=tr?.getConfig?.();if(c?.enabled&&c.outgoing&&!/^[:/]/.test(v)){try{const r=await tr.translate(v,c.target,c.source);tr.rememberOutgoing(r.text);bridge(r.text);return}catch{}}bridge(v)}
@@ -98,19 +111,18 @@ if(S.tab==="build"){m.innerHTML='<h2>Construção / Decoração</h2><p class="mu
 if(S.tab==="visuals"){m.innerHTML='<h2>Visuais</h2><div class="tools"><button data-v="copiar">Copiar visual</button><button data-v="random">Visual aleatório</button><button data-v="editor">Abrir editor nativo</button></div><div class="status">A aplicação das peças do visual permanece no editor nativo do Habblet.</div>';m.onclick=e=>{const b=e.target.closest("[data-v]");if(!b)return;if(b.dataset.v==="copiar")cmd("copiar");else if(b.dataset.v==="random")window.PixelSquadAvatar?.open();else openBuilder()}}
 if(S.tab==="room"){const r=[["bfloor","Floor Plan"],["floor","Editor chão/parede"],["home","Cafofo"],["roommute","Silenciar"],["lock","Trancar"],["wired","Ocultar Wired"],["autofloor","Limpar pisos vazios"],["pyramid","Pirâmides Wired"],["playtest","Modo teste"],["pickall","Recolher meus mobis"],["pickwired","Recolher Wireds"]];m.innerHTML='<h2>Quarto</h2><div class="tools">'+r.map(x=>'<button data-room="'+x[0]+'">'+esc(x[1])+'</button>').join("")+'</div>';m.onclick=e=>{const b=e.target.closest("[data-room]");if(b)cmd(b.dataset.room)}}
 if(S.tab==="enables"||S.tab==="handitems"){
-const isHand=S.tab==="handitems", key=isHand?"pixelsquad_handitems":"pixelsquad_enables", title=isHand?"Handitems":"Efeitos / Enables", icon=isHand?"🎁":"✋", actionName=isHand?"handitem":"enable";
-m.innerHTML='<div class="row"><h2>'+icon+' '+title+'</h2><input id="ps-enable-search" placeholder="Pesquisar por número ou nome..."></div><div class="filters"><button data-catalog-tab="enables">Efeitos</button><button data-catalog-tab="handitems">Handitems</button><button id="ps-item-favorites" aria-pressed="false">☆ Favoritos</button></div><div class="enable-actions"><button id="ps-enable-refresh">Atualizar lista</button><span id="ps-enable-count" class="muted">0 itens</span></div><div class="enablegrid" id="ps-enable-list"></div>';
+const isHand=S.tab==="handitems", key=isHand?"pixelsquad_handitems":"pixelsquad_enables", title="Enables e Handitems", icon=isHand?"🎁":"✋", actionName=isHand?"handitem":"enable";
+m.innerHTML='<div class="row"><h2>'+icon+' '+title+'</h2><input id="ps-enable-search" placeholder="Pesquisar por número ou nome..."></div><div class="filters"><button data-catalog-tab="enables" aria-pressed="'+!isHand+'">Enables</button><button data-catalog-tab="handitems" aria-pressed="'+isHand+'">Handitems</button><button id="ps-item-favorites" aria-pressed="false">☆ Favoritos</button></div><div class="enable-actions"><button id="ps-enable-refresh">Atualizar lista</button><span id="ps-enable-count" class="muted">0 itens</span></div><div class="enablegrid" id="ps-enable-list"></div>';
 let onlyFavorites=false;
 const list=()=>{
 if(!m.isConnected||S.tab!==(isHand?"handitems":"enables"))return;
 const search=m.querySelector("#ps-enable-search");if(!search)return;
-const q=search.value.toLowerCase();
+const normalize=x=>String(x||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();const q=normalize(search.value);
 const source=isHand?S.handitems:S.enables;
-const arr=source.filter((x,i)=>(!onlyFavorites||S.itemFavorites.includes(actionName+":"+x.id))&&(String(i+1).includes(q)||String(x.id).includes(q)||String(x.name).toLowerCase().includes(q)));
+const arr=source.filter(x=>(!onlyFavorites||S.itemFavorites.includes(actionName+":"+x.id))&&(String(x.id).includes(q)||normalize(x.name).includes(q)));
 m.querySelector("#ps-enable-count").textContent=arr.length+" itens";
 m.querySelector("#ps-enable-list").innerHTML=arr.map(x=>{
-const i=source.indexOf(x)+1;
-return '<article class="enable-card"><div class="enable-number">'+i+'</div><button class="ps-item-star" data-item-favorite="'+esc(actionName+":"+x.id)+'" aria-label="Favoritar '+esc(x.name)+'" aria-pressed="'+S.itemFavorites.includes(actionName+":"+x.id)+'">'+(S.itemFavorites.includes(actionName+":"+x.id)?"★":"☆")+'</button><div class="ps-item-preview"><img loading="lazy" decoding="async" alt="'+esc(x.name)+'" src="'+esc(x.image)+'"><span hidden>Prévia indisponível</span></div><div class="enable-info"><strong>'+esc(x.name)+'</strong><b>ID #'+esc(x.id)+'</b><button data-item-action="'+actionName+'" data-item-id="'+esc(x.id)+'">Ativar</button></div></article>'
+return '<article class="enable-card"><div class="enable-number">ID '+esc(x.id)+'</div><button class="ps-item-star" data-item-favorite="'+esc(actionName+":"+x.id)+'" aria-label="Favoritar '+esc(x.name)+'" aria-pressed="'+S.itemFavorites.includes(actionName+":"+x.id)+'">'+(S.itemFavorites.includes(actionName+":"+x.id)?"★":"☆")+'</button><div class="ps-item-preview"><img loading="lazy" decoding="async" alt="'+esc(x.name)+'" src="'+esc(x.image)+'"><span hidden>Prévia indisponível</span></div><div class="enable-info"><strong>'+esc(x.name)+'</strong><b>ID #'+esc(x.id)+'</b><button data-item-action="'+actionName+'" data-item-id="'+esc(x.id)+'">Ativar</button></div></article>'
 }).join("")||'<div class="status">Nenhum item encontrado.</div>';
 for(const image of m.querySelectorAll(".ps-item-preview img")){
  image.onerror=()=>{image.hidden=true;image.parentElement.querySelector("span").hidden=false};
@@ -119,21 +131,19 @@ for(const image of m.querySelectorAll(".ps-item-preview img")){
 m.querySelector("#ps-enable-search").oninput=list;m.querySelector("#ps-item-favorites").onclick=e=>{onlyFavorites=!onlyFavorites;e.currentTarget.setAttribute("aria-pressed",String(onlyFavorites));list()};
 m.querySelector("#ps-enable-refresh").onclick=async()=>{
 const r=await chrome.storage.local.get([key]);
-if(isHand)S.handitems=Array.isArray(r[key])?r[key]:[];else S.enables=enablesList(r[key]);
+if(isHand)S.handitems=handitemsList(r[key]);else S.enables=enablesList(r[key]);
 list();
 };
 m.onclick=e=>{
-const tab=e.target.closest("[data-catalog-tab]");if(tab){S.tab=tab.dataset.catalogTab;persist();render();for(const nav of document.querySelectorAll("#ps-nav [data-tab]"))nav.classList.toggle("active",nav.dataset.tab===S.tab);return}
+const tab=e.target.closest("[data-catalog-tab]");if(tab){S.tab=tab.dataset.catalogTab;persist();render();for(const nav of document.querySelectorAll("#ps-nav [data-tab]"))nav.classList.toggle("active",nav.dataset.tab===(S.tab==="handitems"?"enables":S.tab));return}
 const star=e.target.closest("[data-item-favorite]");if(star){const key=star.dataset.itemFavorite;S.itemFavorites=S.itemFavorites.includes(key)?S.itemFavorites.filter(x=>x!==key):[...S.itemFavorites,key];persist();list();return}
 const b=e.target.closest("[data-item-action]");
 if(!b)return;
 const id=b.dataset.itemId;
-navigator.clipboard?.writeText(id);
 cmd(b.dataset.itemAction,id);
-toast(title+" #"+(Array.from(b.closest(".enable-card").parentElement.children).indexOf(b.closest(".enable-card"))+1)+" ativado");
 };
 const initial=isHand?S.handitems:S.enables;
-if(!initial.length)chrome.storage.local.get([key]).then(r=>{if(isHand)S.handitems=Array.isArray(r[key])?r[key]:[];else S.enables=enablesList(r[key]);list()});else list();
+if(!initial.length)chrome.storage.local.get([key]).then(r=>{if(isHand)S.handitems=handitemsList(r[key]);else S.enables=enablesList(r[key]);list()});else list();
 }
 if(S.tab==="wired"){m.innerHTML='<h2>Wired / Super Wired</h2><input id="ps-wired-search" placeholder="Pesquisar..."><div class="filters"><button data-filter="">Todos</button>'+["Ativadores","Efeitos","Condições","Seletores"].map(x=>'<button data-filter="'+x+'">'+x+'</button>').join("")+'</div><div id="ps-wired-list"></div>';let f="";const list=()=>{const q=m.querySelector("#ps-wired-search").value.toLowerCase();m.querySelector("#ps-wired-list").innerHTML=wired.filter(x=>(!f||x[0]===f)&&x.join(" ").toLowerCase().includes(q)).map(x=>'<article class="card"><b>'+esc(x[0])+'</b><strong>'+esc(x[1])+'</strong><span>'+esc(x[2])+'</span><button data-wired="'+esc(x[1])+'">Gerar comando</button></article>').join("")};m.querySelector("#ps-wired-search").oninput=list;m.querySelector(".filters").onclick=e=>{const b=e.target.closest("[data-filter]");if(b){f=b.dataset.filter;list()}};m.onclick=e=>{const b=e.target.closest("[data-wired]");if(b){const p=prompt("Parâmetro do Super Wired (opcional):","");bridge(":"+b.dataset.wired+(p?":"+p:""))}};list()}
 if(S.tab==="commands"){m.innerHTML='<h2>Comandos</h2><select id="ps-cmd">'+commands.map(x=>'<option>'+esc(x)+'</option>').join("")+'</select><input id="ps-param" placeholder="Parâmetro"><div class="out" id="ps-out"></div><div class="tools"><button id="ps-execute">Executar</button><button id="ps-copy">Copiar</button><button id="ps-save">Favoritar</button></div>';const update=()=>{const c=m.querySelector("#ps-cmd").value,p=m.querySelector("#ps-param").value.trim();m.querySelector("#ps-out").textContent=":"+c+(p?" "+p:"")};m.querySelector("#ps-cmd").onchange=update;m.querySelector("#ps-param").oninput=update;m.querySelector("#ps-execute").onclick=()=>bridge(m.querySelector("#ps-out").textContent);m.querySelector("#ps-copy").onclick=()=>navigator.clipboard?.writeText(m.querySelector("#ps-out").textContent);m.querySelector("#ps-save").onclick=()=>{const v=m.querySelector("#ps-out").textContent;if(!S.favorites.includes(v))S.favorites.push(v);persist();toast("Salvo")};update()}
@@ -145,7 +155,7 @@ window.addEventListener("message",e=>{if(e.source!==window||e.data?.source!=="pi
 window.addEventListener("message",e=>{if(e.data?.source!=="pixelsquad"||e.data.type!=="PS_OPEN_PANEL")return;let allowed=e.source===window;if(!allowed){try{const u=new URL(e.origin);allowed=u.protocol==="https:"&&(u.hostname==="habblet.city"||u.hostname.endsWith(".habblet.city"))&&[...document.querySelectorAll("iframe")].some(f=>f.contentWindow===e.source)}catch{}}if(allowed)panel()});
 window.addEventListener("pixelsquad-language-change",()=>{if(document.getElementById("pixelsquad"))panel()});
 document.addEventListener("keydown",e=>{if(e.shiftKey&&e.key.toLowerCase()==="b"){e.preventDefault();panel()}});
-try{chrome.storage.local.get(["pixelsquad_enables","pixelsquad_handitems"]).then(r=>{S.enables=enablesList(r.pixelsquad_enables);S.handitems=Array.isArray(r.pixelsquad_handitems)?r.pixelsquad_handitems:[]})}catch{}
+try{chrome.storage.local.get(["pixelsquad_enables","pixelsquad_handitems"]).then(r=>{S.enables=enablesList(r.pixelsquad_enables);S.handitems=handitemsList(r.pixelsquad_handitems)})}catch{}
 try{chrome.runtime.onMessage.addListener(m=>{if(m?.type==="openPanel")panel()})}catch{}
 const launch=document.createElement("button");launch.id="pixelsquad-launch";launch.title="PixelSquad";launch.setAttribute("aria-label","Abrir PixelSquad");const logo=document.createElement("img");logo.alt="PixelSquad";logo.src=chrome.runtime.getURL("icons/icon128.png");logo.onerror=()=>{logo.onerror=null;logo.src=chrome.runtime.getURL("icons/icon128.png")};launch.appendChild(logo);launch.onclick=panel;document.documentElement.appendChild(launch);window.PixelSquadLauncher?.movable(launch);
 })();

@@ -1,5 +1,9 @@
 {
   "private": true,
-  "scripts": { "test": "node loading.cjs && node ui.cjs && node performance.cjs && node avatar.cjs && node launcher.cjs && node rgb.cjs" },
-  "devDependencies": { "linkedom": "0.18.13" }
+  "scripts": {
+    "test": "node loading.cjs && node ui.cjs && node performance.cjs && node avatar.cjs && node launcher.cjs && node rgb.cjs && node catalog.cjs"
+  },
+  "devDependencies": {
+    "linkedom": "0.18.13"
+  }
 }
