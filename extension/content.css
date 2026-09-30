@@ -194,3 +194,10 @@
   #pixelsquad-launch{left:180px!important;bottom:7px!important;width:46px!important;height:46px!important}
   #pixelsquad .box{left:8px!important;right:8px!important;bottom:60px!important;width:auto!important;max-width:none!important;height:calc(100vh - 68px)!important;max-height:none!important}
 }
+
+/* Unified panel */
+#pixelsquad nav{display:flex!important;gap:5px!important;overflow-x:auto!important;scrollbar-width:thin!important}
+#pixelsquad nav button{flex:0 0 auto!important}
+#pixelsquad .tools button,#pixelsquad .grid article button{margin-top:7px}
+#pixelsquad textarea{width:100%;box-sizing:border-box;background:#0d1320;color:#fff;border:1px solid #303d58;border-radius:8px;padding:9px;resize:vertical}
+#pixelsquad .grid article{min-height:90px}
