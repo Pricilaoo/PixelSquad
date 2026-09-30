@@ -30,3 +30,5 @@ const PIXELSQUAD_LANGUAGES = {
 function psGetLanguage(){const s=localStorage.getItem("pixelsquad_language");return PIXELSQUAD_LANGUAGES[s]?s:"pt-BR"}
 function psSetLanguage(s){if(PIXELSQUAD_LANGUAGES[s]){localStorage.setItem("pixelsquad_language",s);window.dispatchEvent(new CustomEvent("pixelsquad-language-change",{detail:s}))}}
 function psT(k){const l=PIXELSQUAD_LANGUAGES[psGetLanguage()]||PIXELSQUAD_LANGUAGES["pt-BR"];return l.t[k]||PIXELSQUAD_LANGUAGES["pt-BR"].t[k]||k}
+
+// PixelSquad CI update test
