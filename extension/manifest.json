@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "PixelSquad",
-  "version": "0.5.1.4",
+  "version": "0.5.1.5",
   "description": "Ferramentas de construção, Wired, Enables e Handitems para Habblet. Criado por Pricilao.",
   "permissions": [
     "storage",
