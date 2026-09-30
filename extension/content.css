@@ -1,6 +1,26 @@
-#pixelsquad-launch{position:fixed!important;right:18px!important;bottom:18px!important;z-index:2147483640!important;background:#20283b!important;color:white!important;border:1px solid #53617e!important;border-radius:9px!important;padding:10px 14px!important;font-weight:bold!important;cursor:pointer!important}#pixelsquad{position:fixed!important;inset:0!important;z-index:2147483641!important;pointer-events:none!important;font-family:Arial,sans-serif!important}.box{pointer-events:auto!important;position:absolute!important;top:90px;left:90px;width:700px;max-width:calc(100vw - 30px);max-height:calc(100vh - 30px);overflow:auto;background:#111725;color:#edf2ff;border:1px solid #3c4862;border-radius:15px;box-shadow:0 25px 90px #000c;padding:16px}header{display:flex;justify-content:space-between;align-items:center}header strong{font-size:19px}header small{display:block;color:#8996b1;margin-top:3px}header button{background:none;border:0;color:#fff;font-size:27px;cursor:pointer}nav{display:flex;gap:5px;overflow:auto;margin:15px 0}nav button,.tools button,.filters button,.effect{background:#202a40;color:#eaf0ff;border:1px solid #3c4a68;border-radius:8px;padding:9px 11px;cursor:pointer}h2{margin:5px 0 12px}.hero{background:#1b2437;border-radius:11px;padding:18px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}.grid article,.card{background:#192133;border:1px solid #303d58;border-radius:9px;padding:12px}.grid span,.card span{display:block;color:#929fba;font-size:12px;margin-top:6px}.warning,.muted{color:#8f9bb4;font-size:12px;margin-top:14px}.tools{display:grid;grid-template-columns:1fr 1fr;gap:7px}.tools button{padding:12px}label{display:block;color:#9eabc5;font-size:12px;margin-top:12px}input,select{box-sizing:border-box;width:100%;background:#0b0f18;color:#fff;border:1px solid #3b4761;border-radius:8px;padding:10px;margin-top:5px}.filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}.card{margin:7px 0}.card b{display:block;color:#8e9bb7;font-size:10px}.card strong{display:block;margin-top:4px}.effectgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-top:10px}.effect{font-family:monospace}.out{margin:12px 0;padding:13px;background:#090d15;color:#9de6a5;border-radius:8px;font-family:monospace;word-break:break-all}hr{border:0;border-top:1px solid #30394e;margin:18px 0}@media(max-width:600px){.box{width:calc(100vw - 30px)}.grid,.tools,.effectgrid{grid-template-columns:1fr}}
-
-#pixelsquad .box header{cursor:move!important;user-select:none!important}
-#pixelsquad .box header button{cursor:pointer!important}
-#pixelsquad.dragging{user-select:none!important}
-#pixelsquad .creator{color:#7483a3!important;font-size:11px!important;margin-top:3px!important}
+#pixelsquad-launch{position:fixed!important;right:18px!important;bottom:18px!important;z-index:2147483640!important;background:#20283b!important;color:#fff!important;border:1px solid #53617e!important;border-radius:9px!important;padding:10px 14px!important;font-weight:700!important;cursor:pointer!important}
+#pixelsquad{position:fixed!important;inset:0!important;z-index:2147483641!important;pointer-events:none!important;font-family:Arial,sans-serif!important}
+#pixelsquad .box{pointer-events:auto!important;position:absolute!important;top:90px;left:90px;width:700px;max-width:calc(100vw - 30px);max-height:calc(100vh - 30px);overflow:auto;background:#111725;color:#edf2ff;border:1px solid #3c4862;border-radius:15px;box-shadow:0 25px 90px #000c;padding:16px}
+#pixelsquad header{display:flex;justify-content:space-between;align-items:center;cursor:move;user-select:none}
+#pixelsquad header strong{font-size:19px}#pixelsquad header small{display:block;color:#8996b1;margin-top:3px}
+#pixelsquad header button{background:none;border:0;color:#fff;font-size:27px;cursor:pointer}
+#pixelsquad nav{display:flex;gap:5px;overflow:auto;margin:15px 0}
+#pixelsquad nav button,#pixelsquad .tools button,#pixelsquad .filters button,#pixelsquad .effect,#pixelsquad .card button{background:#202a40;color:#eaf0ff;border:1px solid #3c4a68;border-radius:8px;padding:9px 11px;cursor:pointer}
+#pixelsquad nav button.active{background:#34425f}
+#pixelsquad h2{margin:5px 0 12px}#pixelsquad .hero{background:#1b2437;border-radius:11px;padding:18px}
+#pixelsquad .grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}
+#pixelsquad .grid article,#pixelsquad .card{background:#192133;border:1px solid #303d58;border-radius:9px;padding:12px}
+#pixelsquad .grid span,#pixelsquad .card span{display:block;color:#929fba;font-size:12px;margin-top:6px}
+#pixelsquad .tools{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+#pixelsquad .tools button{padding:12px}
+#pixelsquad label{display:block;color:#9eabc5;font-size:12px;margin-top:12px}
+#pixelsquad input,#pixelsquad select{box-sizing:border-box;width:100%;background:#0b0f18;color:#fff;border:1px solid #3b4761;border-radius:8px;padding:10px;margin-top:5px}
+#pixelsquad .filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}#pixelsquad .card{margin:7px 0}
+#pixelsquad .card b{display:block;color:#8e9bb7;font-size:10px}#pixelsquad .card strong{display:block;margin-top:4px}
+#pixelsquad .effectgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-top:10px}
+#pixelsquad .effect{font-family:monospace}.out{margin:12px 0;padding:13px;background:#090d15;color:#9de6a5;border-radius:8px;font-family:monospace;word-break:break-all}
+#pixelsquad button{margin:2px}.muted{color:#8f9bb4;font-size:12px;margin-top:14px}.status{margin-top:12px;padding:9px;border-radius:8px;background:#0d1320;color:#aab7d0}
+#pixelsquad-toast{position:fixed;left:50%;bottom:25px;transform:translate(-50%,20px);opacity:0;z-index:2147483647;background:#101827;color:#fff;border:1px solid #53617e;padding:10px 14px;border-radius:9px;pointer-events:none;transition:.18s}
+#pixelsquad-toast.show{opacity:1;transform:translate(-50%,0)}
+#pixelsquad hr{border:0;border-top:1px solid #30394e;margin:18px 0}
+@media(max-width:600px){#pixelsquad .box{width:calc(100vw - 30px);padding:12px}#pixelsquad .grid,#pixelsquad .tools,#pixelsquad .effectgrid{grid-template-columns:1fr}}
