@@ -8,14 +8,14 @@
     const stage = document.createElement('div');
     stage.style.cssText = 'position:relative;width:min(900px,100vw,150vh);aspect-ratio:3/2';
     const img = document.createElement('img');
-    img.src = chrome.runtime.getURL('icons/pixelsquad-loading.png');
+    img.src = chrome.runtime.getURL('icons/pixelsquad-loading.gif');
     img.alt = 'PixelSquad';
-    img.width = 1536; img.height = 1024; img.decoding = 'async';
+    img.width = 768; img.height = 512; img.decoding = 'async';
     img.style.cssText = 'display:block;width:100%;height:100%';
     img.onerror = () => { img.onerror = null; img.src = chrome.runtime.getURL('icons/icon128.png'); };
-    // Replace the bar painted in the image with a live HTML bar.
+    // Keep loading progress accessible without adding a visible bar over the GIF.
     const mask = document.createElement('div');
-    mask.style.cssText = 'position:absolute;left:31%;top:73%;width:38%;height:10%;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px';
+    mask.style.cssText = 'position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0';
     const bar = document.createElement('div');
     bar.setAttribute('role', 'progressbar');
     bar.setAttribute('aria-label', 'Carregamento da página PixelSquad');
