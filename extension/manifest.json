@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "PixelSquad",
-  "version": "0.5.3.11",
+  "version": "0.5.3.12",
   "description": "Painel unificado de construção, Wired, visuais, chat, tradução, Enables e Handitems para Habblet. Criado por Pricilao.",
   "permissions": [
     "storage",
@@ -43,7 +43,10 @@
       ],
       "run_at": "document_start",
       "world": "ISOLATED",
-      "all_frames": true
+      "all_frames": true,
+      "css": [
+        "tool-panels.css"
+      ]
     },
     {
       "matches": [
@@ -91,6 +94,21 @@
         "toolsblet-importer.js"
       ],
       "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://www.habblet.city/*",
+        "https://*.habblet.city/*"
+      ],
+      "js": [
+        "music-player.js"
+      ],
+      "css": [
+        "music-player.css"
+      ],
+      "run_at": "document_idle",
+      "world": "ISOLATED",
+      "all_frames": true
     }
   ],
   "web_accessible_resources": [

@@ -1,0 +1,91 @@
+/* PixelSquad tool windows: compact Habblet-style chrome.
+   Scoped to editors so chat, login and other hotel UI are unaffected. */
+:is(.nitro-wired, .nitro-floorplan-editor, .nitro-room-settings, .ps-tool-window) {
+  --ps-tool-paper: #e9e9e1;
+  --ps-tool-ink: #161616;
+  --ps-tool-blue: #207792;
+  background: var(--ps-tool-paper) !important;
+  color: var(--ps-tool-ink) !important;
+  border: 1px solid #252525 !important;
+  border-radius: 8px !important;
+  box-shadow: inset 0 0 0 2px #fff, 0 3px 5px #0007 !important;
+  overflow: hidden;
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+}
+.nitro-wired {
+  width: 300px !important;
+  max-width: calc(100vw - 16px);
+}
+:is(.nitro-wired, .nitro-floorplan-editor, .nitro-room-settings, .ps-tool-window) .nitro-card-header {
+  min-height: 30px;
+  padding: 4px 10px !important;
+  background: var(--ps-tool-blue) !important;
+  color: #fff !important;
+  border-bottom: 1px solid #174859;
+  border-radius: 7px 7px 0 0 !important;
+  text-align: center;
+  box-shadow: inset 0 1px 0 #ffffff55;
+}
+:is(.nitro-wired, .nitro-floorplan-editor, .nitro-room-settings, .ps-tool-window) .nitro-card-header-text {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff !important;
+}
+:is(.nitro-wired, .nitro-floorplan-editor, .nitro-room-settings, .ps-tool-window) .nitro-card-header-close {
+  width: 18px;
+  height: 19px;
+  border: 1px solid #59210e;
+  border-radius: 3px;
+  background-color: #bf2c16 !important;
+  box-shadow: inset 0 0 0 1px #ffffff99;
+}
+:is(.nitro-wired, .nitro-floorplan-editor, .nitro-room-settings, .ps-tool-window) .content-area {
+  background: var(--ps-tool-paper) !important;
+  color: var(--ps-tool-ink) !important;
+  padding: 9px 8px !important;
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
+}
+:is(.nitro-wired, .nitro-floorplan-editor, .nitro-room-settings, .ps-tool-window) hr {
+  opacity: 1;
+  border: 0;
+  border-top: 1px solid #92928d;
+  margin: 9px 0;
+}
+:is(.nitro-wired, .nitro-floorplan-editor, .nitro-room-settings, .ps-tool-window) :is(.form-control, .form-select) {
+  color: #171717;
+  background-color: #fff;
+  border: 1px solid #a5aaa9;
+  border-radius: 4px;
+  font-size: 12px;
+}
+:is(.nitro-wired, .nitro-floorplan-editor, .nitro-room-settings, .ps-tool-window) :is(.form-control, .form-select):focus {
+  border-color: #2388b4;
+  box-shadow: 0 0 0 2px #2388b426;
+}
+:is(.nitro-wired, .nitro-floorplan-editor, .nitro-room-settings, .ps-tool-window) .btn {
+  border-radius: 3px;
+  font-size: 12px;
+  min-height: 27px;
+  box-shadow: inset 0 1px 0 #ffffff38;
+}
+:is(.nitro-wired, .nitro-floorplan-editor, .nitro-room-settings, .ps-tool-window) .btn-success {
+  background-color: #008807;
+  border: 2px solid #18ad23;
+  color: #fff;
+}
+:is(.nitro-wired, .nitro-floorplan-editor, .nitro-room-settings, .ps-tool-window) .btn-primary {
+  background-color: #1b6076;
+  border: 2px solid #2b849c;
+  color: #fff;
+}
+:is(.nitro-wired, .nitro-floorplan-editor, .nitro-room-settings, .ps-tool-window) .btn-secondary {
+  background-color: #d4d8d7;
+  border: 1px solid #aeb8ba;
+  color: #196d8a;
+}
+:is(.nitro-wired, .nitro-floorplan-editor, .nitro-room-settings, .ps-tool-window) :is(button, input, select, textarea):focus-visible {
+  outline: 2px solid #258ab2;
+  outline-offset: 2px;
+}

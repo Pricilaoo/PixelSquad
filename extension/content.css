@@ -285,3 +285,10 @@
 #pixelsquad.ps-sidebar nav button{text-align:left!important;width:100%!important}
 #pixelsquad.ps-sidebar #ps-main{grid-column:2;grid-row:2;min-width:0}
 @media(max-width:600px){#pixelsquad.ps-sidebar .box{display:block!important}#pixelsquad.ps-sidebar nav{display:flex!important;flex-direction:row!important;max-height:none}#pixelsquad .ps-custom-grid{grid-template-columns:1fr}}
+
+/* Appearance controls also cover explicitly sized native panel text. */
+#pixelsquad :is(label, input, select, textarea, nav button, .tools button, .card span, .muted, .status) {
+  font-size: calc(12px * var(--ps-scale)) !important;
+}
+#pixelsquad :is(h2, header strong) { font-size: calc(19px * var(--ps-scale)) !important; }
+#pixelsquad :is(label, input, select, textarea, .tools button, .card strong) { color: var(--ps-text) !important; }
