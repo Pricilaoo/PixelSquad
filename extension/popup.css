@@ -1,2 +1,11 @@
-body{width:290px;padding:18px;background:#121725;color:#fff;font:14px Arial;margin:0}.logo{font-size:18px}p{color:#9da9c0}.small{font-size:11px;color:#7f8ba4;margin-top:12px}button{width:100%;padding:11px;border:0;border-radius:9px;background:#526ed0;color:white;font-weight:bold;cursor:pointer}
-.creator{font-size:11px;color:#7f8ba4;margin:8px 0 12px}
+body{width:300px;padding:18px;background:#0f0c1b;color:#fff;font:14px Arial,sans-serif;margin:0;box-sizing:border-box}
+.brand{display:flex;align-items:center;gap:11px;margin-bottom:12px}
+.brand-mark{width:48px;height:48px;flex:none;filter:drop-shadow(0 4px 10px rgba(116,82,255,.28))}
+.logo{font-size:19px;font-weight:900;letter-spacing:1.2px}
+.tagline{font-size:9px;color:#8f87ad;margin-top:3px}
+p{color:#b4aec5;line-height:1.4;margin:10px 0}
+.creator{font-size:11px;color:#817995;margin:8px 0 12px}
+.creator strong{color:#c9c0e8}
+button{width:100%;padding:11px;border:0;border-radius:9px;background:linear-gradient(135deg,#7452ff,#5b3be0);color:white;font-weight:bold;cursor:pointer;box-shadow:0 5px 16px rgba(116,82,255,.22)}
+button:hover{filter:brightness(1.08)}
+.small{font-size:11px;color:#716b83;margin-top:12px}
