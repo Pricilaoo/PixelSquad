@@ -8,6 +8,6 @@
   "action": {"default_title":"PixelSquad","default_popup":"popup.html"},
   "content_scripts":[{
     "matches":["https://www.habblet.city/*","https://*.habblet.city/*"],
-    "js":["content.js"],"css":["content.css"],"run_at":"document_idle"
+    "js":["locales.js","content.js"],"css":["content.css"],"run_at":"document_idle"
   }]
 }
