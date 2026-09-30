@@ -234,3 +234,26 @@
     max-width:calc(100vw - 16px)!important;
   }
 }
+
+/* Enables e Handitems — catálogo numerado */
+#pixelsquad .enable-card{position:relative!important}
+#pixelsquad .enable-number{
+  position:absolute!important;
+  top:7px!important;
+  left:7px!important;
+  z-index:2!important;
+  min-width:25px!important;
+  height:25px!important;
+  padding:0 6px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border-radius:7px!important;
+  background:#00dcbf!important;
+  color:#07110f!important;
+  font-weight:900!important;
+  font-size:12px!important;
+  box-shadow:0 2px 8px #0008!important;
+}
+#pixelsquad .enable-card img{height:92px!important}
+#pixelsquad .enable-info button{background:#245b54!important;border-color:#398b7e!important;color:#fff!important;font-weight:700!important}
