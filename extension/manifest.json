@@ -96,7 +96,8 @@
     {
       "resources": [
         "icons/icon128.png",
-        "icons/pixelsquad-loading.gif"
+        "icons/pixelsquad-loading.gif",
+        "icons/pixelsquad-loading.png"
       ],
       "matches": [
         "https://www.habblet.city/*",
