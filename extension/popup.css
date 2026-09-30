@@ -1,6 +1,6 @@
 body{width:300px;padding:18px;background:#0f0c1b;color:#fff;font:14px Arial,sans-serif;margin:0;box-sizing:border-box}
 .brand{display:flex;align-items:center;gap:11px;margin-bottom:12px}
-.brand-mark{width:48px;height:48px;flex:none;filter:drop-shadow(0 4px 10px rgba(116,82,255,.28))}
+.brand-logo{width:48px;height:48px;flex:none;object-fit:cover;border-radius:10px;image-rendering:auto;filter:drop-shadow(0 4px 10px rgba(116,82,255,.28))}
 .logo{font-size:19px;font-weight:900;letter-spacing:1.2px}
 .tagline{font-size:9px;color:#8f87ad;margin-top:3px}
 p{color:#b4aec5;line-height:1.4;margin:10px 0}
