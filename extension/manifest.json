@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "PixelSquad",
-  "version": "0.5.2.10",
-  "description": "Ferramentas de construção, Wired, Enables e Handitems para Habblet. Criado por Pricilao.",
+  "version": "0.5.3.0",
+  "description": "Painel unificado de construção, Wired, visuais, chat, tradução, Enables e Handitems para Habblet. Criado por Pricilao.",
   "permissions": [
     "storage",
     "activeTab"
@@ -11,7 +11,8 @@
     "https://www.habblet.city/*",
     "https://*.habblet.city/*",
     "https://www.toolsblet.in/*",
-    "https://toolsblet.in/*"
+    "https://toolsblet.in/*",
+    "https://translate.googleapis.com/*"
   ],
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyWKhVK24SYPbywk4NsipWleAFhPHUK+D3GHXIuLRShG3DfCAqMARxqwSzlW1fs+GKLHYUIvrpbBa1EQyKM2VXNL1dc007AkLm6RDUuCjXAIX+n2tPjw/1a+HF9271A8nXr+JRo+oUflawgI5J4umq3jeuGb6aR5kyelh/dqRIfuphGtb1ZwsFPDMK7665B4hTBf619WZxFlUjmAv7LlLT4ftNS2eXe6wbYNHaAdwQV9hULhMxh0rfULJU8lOP6EHc4fSdCrSds1NuaDKbc1HKAPJxIfoTd1R6Dw9mDTkgcCot2/0NqrqQMLPXYizzTFz4lmbHJu7gZBZhrrCHFctewIDAQAB",
   "update_url": "https://raw.githubusercontent.com/Pricilaoo/PixelSquad/main/updates/update.xml",
@@ -39,6 +40,7 @@
       ],
       "js": [
         "locales.js",
+        "translation.js",
         "content.js"
       ],
       "css": [
