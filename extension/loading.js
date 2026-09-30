@@ -1,7 +1,7 @@
 (() => {
   if (window.__PIXELSQUAD_LOADING__) return;
   window.__PIXELSQUAD_LOADING__ = true;
-  const start = () => {
+  const createScreen = () => {
     const overlay = document.createElement('div');
     overlay.id = 'pixelsquad-loading';
     overlay.style.cssText = 'position:fixed;inset:0;z-index:2147483646;display:grid;place-items:center;background:#000;pointer-events:none;transition:opacity .22s;overflow:hidden';
@@ -30,33 +30,117 @@
     style.textContent = '@media(prefers-reduced-motion:reduce){#pixelsquad-loading,#pixelsquad-loading [role=progressbar]>div{transition:none!important}}';
     bar.appendChild(fill); mask.append(bar, label); stage.append(img, mask); overlay.append(stage, style);
     document.documentElement.appendChild(overlay);
-    let closed = false, timer;
+    let removed = false;
+    let lastValue = null;
     const progress = value => {
-      bar.setAttribute('aria-valuenow', String(value));
-      fill.style.transform = `scaleX(${value / 100})`;
-      label.textContent = value === 100 ? 'Carregamento concluído!' : `Carregando PixelSquad… ${value}%`;
+      if (removed || value === lastValue) return;
+      lastValue = value;
+      if (value === null) {
+        bar.removeAttribute('aria-valuenow');
+        fill.style.transform = 'scaleX(0)';
+        label.textContent = 'Conectando ao Habblet…';
+      } else {
+        bar.setAttribute('aria-valuenow', String(value));
+        fill.style.transform = `scaleX(${value / 100})`;
+        label.textContent = value === 100 ? 'Jogo pronto!' : `Carregando Habblet… ${value}%`;
+      }
     };
-    const close = () => {
-      if (closed) return;
-      closed = true; clearTimeout(timer);
-      document.removeEventListener('DOMContentLoaded', onDom);
-      window.removeEventListener('load', onLoad);
-      window.removeEventListener('pagehide', close);
-      overlay.style.opacity = '0'; setTimeout(() => overlay.remove(), 260);
-    };
-    const onDom = () => { if (!closed) progress(65); };
-    const onLoad = () => {
-      if (closed) return;
-      progress(100); clearTimeout(timer); timer = setTimeout(close, 350);
-    };
-    progress(document.readyState === 'loading' ? 10 : 65);
-    document.addEventListener('DOMContentLoaded', onDom, { once: true });
-    window.addEventListener('load', onLoad, { once: true });
-    window.addEventListener('pagehide', close, { once: true });
-    // A stalled resource must not keep the overlay visible forever.
-    timer = setTimeout(close, 15000);
-    if (document.readyState === 'complete') onLoad();
+    const dismiss = document.createElement('button');
+    dismiss.type = 'button';
+    dismiss.textContent = 'Mostrar tela original';
+    dismiss.style.cssText = 'position:absolute;bottom:12px;right:12px;pointer-events:auto;background:#15111e;color:#ddd;border:1px solid #554065;border-radius:6px;padding:8px;cursor:pointer';
+    overlay.appendChild(dismiss);
+    label.textContent = 'Conectando ao Habblet…';
+    const remove = () => { removed = true; overlay.remove(); };
+    return { overlay, progress, remove, dismiss };
   };
-  if (document.documentElement) start();
-  else document.addEventListener('DOMContentLoaded', start, { once: true });
+
+  // Nitro's native loading view is the source of progress. A page load or
+  // canvas allocation alone does not mean that authentication/game init finished.
+  let screen = null, completionTimer = null, pendingTimer = null;
+  let poll = null, scheduled = null, observer = null;
+  let bypass = false, sawLoader = false, stopped = false;
+  const visible = element => {
+    if (!element || !element.isConnected || !element.getClientRects().length) return false;
+    for (let node = element; node && node.nodeType === 1; node = node.parentElement) {
+      const css = getComputedStyle(node);
+      if (css.display === 'none' || css.visibility === 'hidden' || Number(css.opacity) === 0) return false;
+    }
+    return true;
+  };
+  const dropScreen = () => {
+    clearTimeout(completionTimer); completionTimer = null;
+    clearTimeout(pendingTimer); pendingTimer = null;
+    if (poll !== null) { clearInterval(poll); poll = null; }
+    screen?.remove(); screen = null;
+  };
+  const show = () => {
+    if (screen || bypass || stopped) return;
+    screen = createScreen();
+    screen.dismiss.addEventListener('click', () => { bypass = true; dropScreen(); });
+    // Poll only while a loading screen is active; also handles CSS transitions.
+    poll = setInterval(scan, 750);
+  };
+  const nativePercent = loader => {
+    const inner = loader.querySelector('.nitro-progress-bar-inner');
+    const match = inner?.style.width?.match(/^(\d+(?:\.\d+)?)%$/)
+      || loader.textContent.match(/(\d+(?:\.\d+)?)\s*%/);
+    if (!match) return null;
+    return Math.min(100, Math.max(0, Number(match[1])));
+  };
+  const scan = () => {
+    if (stopped) return;
+    const loader = [...document.querySelectorAll('.nitro-loading')].find(visible);
+    if (loader) {
+      sawLoader = true;
+      clearTimeout(pendingTimer); pendingTimer = null;
+      clearTimeout(completionTimer); completionTimer = null;
+      const percent = nativePercent(loader);
+      // Nitro replaces its progress widgets with an error message on failure.
+      // Reveal that message instead of hiding connection/WebGL errors.
+      if (percent === null && loader.textContent.trim()) {
+        bypass = true; dropScreen(); return;
+      }
+      show();
+      // Reserve 100% for the game UI, even if assets reach 100% first.
+      screen?.progress(percent === null ? null : Math.min(99, percent));
+      return;
+    }
+    const ready = [...document.querySelectorAll('.nitro-toolbar')].some(visible);
+    if (ready && screen && completionTimer === null) {
+      screen.progress(100);
+      completionTimer = setTimeout(dropScreen, 350);
+    }
+    // Never infer readiness from window.load or from loader disappearance alone.
+    if (!loader && sawLoader && !ready && screen) screen.progress(null);
+  };
+  const begin = () => {
+    observer = new MutationObserver(records => {
+      if (records.every(record => screen?.overlay.contains(record.target))) return;
+      if (scheduled !== null) return;
+      scheduled = setTimeout(() => { scheduled = null; scan(); }, 80);
+    });
+    observer.observe(document.documentElement, {
+      subtree: true, childList: true, characterData: true, attributes: true,
+      attributeFilter: ['class', 'style', 'hidden']
+    });
+    // Cover known client entry routes before React paints its native loader.
+    // Other pages (login/news/profile) remain untouched.
+    if (/^\/(?:hotel|client|nitro)(?:\/|$)/i.test(location.pathname)
+        && !document.querySelector('.nitro-toolbar')) {
+      show();
+      // Unsupported client layouts fall back to their own screen, without 100%.
+      pendingTimer = setTimeout(() => { if (!sawLoader) dropScreen(); }, 20000);
+    }
+    scan();
+  };
+  const stop = () => {
+    stopped = true; observer?.disconnect(); clearTimeout(scheduled); dropScreen();
+  };
+  window.addEventListener('pagehide', stop);
+  window.addEventListener('pageshow', event => {
+    if (event.persisted) { stopped = false; sawLoader = false; bypass = false; begin(); }
+  });
+  if (document.documentElement) begin();
+  else document.addEventListener('DOMContentLoaded', begin, { once: true });
 })();
