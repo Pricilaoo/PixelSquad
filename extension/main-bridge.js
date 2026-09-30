@@ -9,29 +9,48 @@ function chatInput(){
 function reactProps(el){return Object.keys(el||{}).filter(k=>k.startsWith("__reactProps$")).map(k=>el[k]).find(Boolean)||null}
 function setValue(el,value){
  el.focus();
- if(el.isContentEditable){el.textContent=value}
+ if(el.isContentEditable)el.textContent=value;
  else {const p=el instanceof HTMLTextAreaElement?HTMLTextAreaElement.prototype:HTMLInputElement.prototype;const s=Object.getOwnPropertyDescriptor(p,"value")?.set;s?s.call(el,value):el.value=value}
- const props=reactProps(el);
- const ev={target:el,currentTarget:el,nativeEvent:{target:el},type:"change",bubbles:true};
- if(props?.onChange)props.onChange(ev); else if(props?.onInput)props.onInput({...ev,type:"input"});
- el.dispatchEvent(new Event("input",{bubbles:true}));el.dispatchEvent(new Event("change",{bubbles:true}));
+ el.dispatchEvent(new InputEvent("input",{bubbles:true,composed:true,inputType:"insertText",data:value}));
+ el.dispatchEvent(new Event("change",{bubbles:true,composed:true}));
 }
 function clickReact(el){
  const p=reactProps(el);
- if(p?.onClick){p.onClick({target:el,currentTarget:el,button:0,bubbles:true,preventDefault(){},stopPropagation(){}});return "react"}
+ if(p?.onClick){try{p.onClick({target:el,currentTarget:el,nativeEvent:new MouseEvent("click",{bubbles:true}),button:0,bubbles:true,preventDefault(){},stopPropagation(){}});return "react"}catch{}}
  el.click();return "dom"
 }
-function send(command){
+function sendChat(command){
  const input=chatInput();if(!input)return {ok:false,error:"chat-input-not-found"};
  setValue(input,command);
  const form=input.closest("form");
  const near=form||input.parentElement?.parentElement||input.parentElement;
  const buttons=[...(near?.querySelectorAll("button")||[])];
- const btn=buttons.find(b=>b.type==="submit"||/enviar|send|chat/i.test((b.getAttribute("aria-label")||"")+" "+(b.getAttribute("title")||"")+" "+clean(b.textContent)));
- if(btn)return {ok:true,method:clickReact(btn),tag:input.tagName};
- if(form?.requestSubmit){form.requestSubmit();return {ok:true,method:"form",tag:input.tagName}}
- for(const t of ["keydown","keypress","keyup"])input.dispatchEvent(new KeyboardEvent(t,{key:"Enter",code:"Enter",keyCode:13,which:13,bubbles:true,cancelable:true,composed:true}));
- return {ok:true,method:"keyboard",tag:input.tagName};
+ const btn=buttons.find(b=>b.type==="submit"||/enviar|send/i.test((b.getAttribute("aria-label")||"")+" "+(b.getAttribute("title")||"")+" "+clean(b.textContent)));
+ if(btn)return {ok:true,method:"chat-"+clickReact(btn),tag:input.tagName};
+ if(form?.requestSubmit){form.requestSubmit();return {ok:true,method:"chat-form",tag:input.tagName}}
+ input.dispatchEvent(new KeyboardEvent("keydown",{key:"Enter",code:"Enter",keyCode:13,which:13,bubbles:true,cancelable:true,composed:true}));
+ input.dispatchEvent(new KeyboardEvent("keyup",{key:"Enter",code:"Enter",keyCode:13,which:13,bubbles:true,composed:true}));
+ return {ok:true,method:"chat-keyboard",tag:input.tagName}
+}
+function findDirectSit(){
+ const exact=["sitAvatar","doSit","setSit","toggleSit","sit"];
+ for(const name of exact){try{if(typeof window[name]==="function")return {fn:window[name],name}}catch{}}
+ const seen=new Set(),queue=[];
+ for(const k of Object.keys(window)){try{const v=window[k];if(v&&typeof v==="object"&&v!==window)queue.push([k,v,0])}catch{}}
+ while(queue.length){
+  const [path,obj,depth]=queue.shift();if(!obj||seen.has(obj)||depth>2)continue;seen.add(obj);
+  for(const k of Object.keys(obj)){
+   let v;try{v=obj[k]}catch{continue}
+   if(typeof v==="function"&&/^(sit|doSit|setSit|toggleSit)$/i.test(k))return {fn:v.bind(obj),name:path+"."+k};
+   if(v&&typeof v==="object"&&depth<2)queue.push([path+"."+k,v,depth+1])
+  }
+ }
+ return null
+}
+function send(command){
+ const value=clean(command);
+ if(value===":sit"){const hit=findDirectSit();if(hit){try{hit.fn();return {ok:true,method:"client-"+hit.name}}catch{}}}
+ return sendChat(value);
 }
 window.addEventListener("message",e=>{
  if(e.source!==window||e.data?.source!=="pixelsquad")return;
