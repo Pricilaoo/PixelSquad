@@ -23,18 +23,66 @@ function persist(){localStorage.setItem(KEY,JSON.stringify({height:S.height,dire
 function toast(msg){let t=document.getElementById("pixelsquad-toast");if(!t){t=document.createElement("div");t.id="pixelsquad-toast";document.body.appendChild(t)}t.textContent=msg;t.classList.add("show");clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.classList.remove("show"),1800)}
 function emitAction(action,data={}){S.lastAction=action;S.history.push({action,data,time:Date.now()});S.history=S.history.slice(-30);persist();window.dispatchEvent(new CustomEvent("pixelsquad-action",{detail:{action,data}}));toast(psT("applied")+": "+action+" • v0.5.1")}
 function findChatInput(){
-  const selectors=['textarea[placeholder*="falar" i]','textarea[placeholder*="digite" i]','input[placeholder*="falar" i]','input[placeholder*="digite" i]','[contenteditable="true"]','textarea','input[type="text"]'];
-  return selectors.map(s=>document.querySelector(s)).find(Boolean)||null;
+  const selectors=[
+    'textarea[placeholder*="falar" i]','textarea[placeholder*="digite" i]',
+    'textarea[placeholder*="mensagem" i]','textarea[aria-label*="chat" i]',
+    'input[placeholder*="falar" i]','input[placeholder*="digite" i]',
+    'input[placeholder*="mensagem" i]','input[aria-label*="chat" i]',
+    '[contenteditable="true"][role="textbox"]','[contenteditable="true"]'
+  ];
+  const visible=el=>{if(!el)return false;const r=el.getBoundingClientRect();return r.width>0&&r.height>0};
+  const preferred=selectors.map(s=>[...document.querySelectorAll(s)]).flat().find(visible);
+  if(preferred)return preferred;
+  const candidates=[...document.querySelectorAll('textarea,input[type="text"],[contenteditable="true"]')]
+    .filter(visible)
+    .filter(el=>{const p=(el.getAttribute('placeholder')||'').toLowerCase();return !/senha|email|login|pesquisar|buscar|search/.test(p)});
+  return candidates.sort((a,b)=>b.getBoundingClientRect().top-a.getBoundingClientRect().top)[0]||null;
+}
+function setNativeValue(input,value){
+  if(input.isContentEditable){
+    input.focus();
+    input.textContent=value;
+    input.dispatchEvent(new InputEvent("input",{bubbles:true,inputType:"insertText",data:value}));
+    input.dispatchEvent(new Event("change",{bubbles:true}));
+    return;
+  }
+  const proto=input instanceof HTMLTextAreaElement?HTMLTextAreaElement.prototype:HTMLInputElement.prototype;
+  const setter=Object.getOwnPropertyDescriptor(proto,"value")?.set;
+  if(setter)setter.call(input,value);else input.value=value;
+  input.dispatchEvent(new InputEvent("input",{bubbles:true,inputType:"insertText",data:value}));
+  input.dispatchEvent(new Event("change",{bubbles:true}));
+}
+function findChatSendButton(input){
+  const form=input.closest("form");
+  const near=form||input.parentElement?.parentElement||input.parentElement;
+  const selectors=['button[type="submit"]','button[aria-label*="enviar" i]','button[title*="enviar" i]','button[aria-label*="send" i]','button[title*="send" i]'];
+  for(const s of selectors){const b=near?.querySelector(s);if(b)return b}
+  return [...(near?.querySelectorAll("button")||[])].find(b=>/^(enviar|send)$/i.test((b.innerText||b.textContent||"").trim()))||null;
 }
 function sendHabbletCommand(command){
   const value=String(command||"").trim(); if(!value)return false;
-  const input=findChatInput(); if(!input){toast("Caixa de chat do Habblet não encontrada");return false}
-  input.focus();
-  if(input.isContentEditable){input.textContent=value;input.dispatchEvent(new InputEvent("input",{bubbles:true,inputType:"insertText",data:value}))}
-  else{const proto=input instanceof HTMLTextAreaElement?HTMLTextAreaElement.prototype:HTMLInputElement.prototype;const setter=Object.getOwnPropertyDescriptor(proto,"value")?.set;setter?setter.call(input,value):input.value=value;input.dispatchEvent(new Event("input",{bubbles:true}));input.dispatchEvent(new Event("change",{bubbles:true}))}
-  input.dispatchEvent(new KeyboardEvent("keydown",{key:"Enter",code:"Enter",keyCode:13,which:13,bubbles:true}));
-  input.dispatchEvent(new KeyboardEvent("keyup",{key:"Enter",code:"Enter",keyCode:13,which:13,bubbles:true}));
-  emitAction("chat-command",{command:value}); toast("Executado: "+value); return true;
+  const input=findChatInput();
+  if(!input){toast("Caixa de chat do Habblet não encontrada");return false}
+  setNativeValue(input,value);
+  const send=findChatSendButton(input);
+  if(send){
+    send.click();
+  }else if(input.isContentEditable){
+    input.dispatchEvent(new KeyboardEvent("keydown",{key:"Enter",code:"Enter",keyCode:13,which:13,bubbles:true,cancelable:true,composed:true}));
+    input.dispatchEvent(new KeyboardEvent("keypress",{key:"Enter",code:"Enter",keyCode:13,which:13,bubbles:true,cancelable:true,composed:true}));
+    input.dispatchEvent(new KeyboardEvent("keyup",{key:"Enter",code:"Enter",keyCode:13,which:13,bubbles:true,composed:true}));
+  }else{
+    const form=input.closest("form");
+    if(form?.requestSubmit) form.requestSubmit();
+    else if(form) form.dispatchEvent(new Event("submit",{bubbles:true,cancelable:true}));
+    else {
+      input.dispatchEvent(new KeyboardEvent("keydown",{key:"Enter",code:"Enter",keyCode:13,which:13,bubbles:true,cancelable:true,composed:true}));
+      input.dispatchEvent(new KeyboardEvent("keyup",{key:"Enter",code:"Enter",keyCode:13,which:13,bubbles:true,composed:true}));
+    }
+  }
+  emitAction("chat-command",{command:value});
+  toast("Enviado ao Habblet: "+value);
+  return true;
 }
 function avatarCommand(name,param=""){return sendHabbletCommand(":"+name+(String(param).trim()?" "+String(param).trim():""))}
 function tryClientAction(action,data={}){const selectors={
@@ -57,7 +105,7 @@ if(S.tab==="build"){m.innerHTML='<h2>'+esc(psT("build"))+'</h2><div class="tools
 if(S.tab==="enables"){m.innerHTML='<div class="row"><h2>Enables / Handitems</h2><input id="ps-enable-search" placeholder="Pesquisar por nome ou número..."></div><div class="enable-actions"><button id="ps-enable-refresh">Atualizar lista</button><span id="ps-enable-count" class="muted">Carregando...</span></div><div class="enablegrid" id="ps-enable-list"></div>';const list=()=>{const q=(m.querySelector("#ps-enable-search").value||"").toLowerCase();const arr=(S.enables||[]).filter(x=>String(x.id).includes(q)||String(x.name).toLowerCase().includes(q));m.querySelector("#ps-enable-count").textContent=arr.length+" itens";m.querySelector("#ps-enable-list").innerHTML=arr.map(x=>'<article class="enable-card"><img src="'+esc(x.image)+'" alt="'+esc(x.name)+'" loading="lazy"><div class="enable-info"><strong>'+esc(x.name)+'</strong><b>#'+esc(x.id)+'</b><button data-enable-id="'+esc(x.id)+'">Usar / Copiar ID</button></div></article>').join("")||'<div class="status">Nenhum enable importado. Abra o botão "Importar Enables / Handitems" da extensão e deixe o ToolsBlet carregar.</div>'};m.querySelector("#ps-enable-search").oninput=list;m.querySelector("#ps-enable-refresh").onclick=async()=>{try{const r=await chrome.storage.local.get(["pixelsquad_enables"]);S.enables=Array.isArray(r.pixelsquad_enables)?r.pixelsquad_enables:[];list();toast("Lista atualizada: "+S.enables.length)}catch{toast("Não foi possível atualizar")}};m.onclick=async e=>{const b=e.target.closest("[data-enable-id]");if(!b)return;const id=b.dataset.enableId;try{await navigator.clipboard.writeText(id)}catch{};avatarCommand("handitem",id)};list()}
 if(S.tab==="wired"){m.innerHTML='<div class="row"><h2>'+esc(psT("wired"))+'</h2><input id="ps-wired-search" placeholder="'+esc(psT("search"))+'..."></div><div class="filters"><button data-filter="">'+esc(psT("all"))+'</button>'+["Efeitos","Condições","Ativadores","Seletores"].map(x=>'<button data-filter="'+x+'">'+x+'</button>').join("")+'</div><div id="ps-wired-list"></div>';let filter="";const list=()=>{const q=(m.querySelector("#ps-wired-search").value||"").toLowerCase();m.querySelector("#ps-wired-list").innerHTML=wired.filter(x=>(!filter||x[0]===filter)&&x.join(" ").toLowerCase().includes(q)).map(x=>'<article class="card"><b>'+esc(x[0])+'</b><strong>'+esc(x[1])+'</strong><span>'+esc(x[2])+'</span><button class="use-wired" data-name="'+esc(x[1])+'">Usar</button></article>').join("")||'<div class="status">Nenhum resultado.</div>'};m.querySelector("#ps-wired-search").oninput=list;m.querySelector(".filters").onclick=e=>{const b=e.target.closest("[data-filter]");if(b){filter=b.dataset.filter;list()}};m.onclick=e=>{const b=e.target.closest(".use-wired");if(b)emitAction("wired",{name:b.dataset.name})};list()}
 if(S.tab==="effects"){const names=["enable","fastwalk","handitem","kickpower","moonwalk","sit","lay","lock","roommute","walkthrough","clickthrough","randomstate","tag","showgroupforum"];m.innerHTML='<h2>'+esc(psT("effects"))+'</h2><input id="ps-effect-search" placeholder="'+esc(psT("search"))+'..."><div class="effectgrid" id="ps-effects"></div>';const list=()=>{const q=m.querySelector("#ps-effect-search").value.toLowerCase();m.querySelector("#ps-effects").innerHTML=names.filter(x=>x.includes(q)).map(x=>'<button class="effect" data-command="'+x+'">★ '+x+'</button>').join("")};m.querySelector("#ps-effect-search").oninput=list;m.onclick=async e=>{const b=e.target.closest("[data-command]");if(!b)return;const cmd=b.dataset.command;if(!S.favorites.includes(cmd))S.favorites.push(cmd);persist();avatarCommand(cmd)};list()}
-if(S.tab==="commands"){m.innerHTML='<h2>'+esc(psT("commands"))+'</h2><select id="ps-cmd">'+commands.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join("")+'</select><input id="ps-param" placeholder="'+esc(psT("parameter"))+'"><div class="out" id="ps-out"></div>';const update=()=>{const c=m.querySelector("#ps-cmd").value,p=m.querySelector("#ps-param").value.trim();m.querySelector("#ps-out").textContent=c+(p?":"+p:"")};m.querySelector("#ps-cmd").onchange=update;m.querySelector("#ps-param").oninput=update;m.querySelector("#ps-copy").onclick=async()=>{try{await navigator.clipboard.writeText(m.querySelector("#ps-out").textContent);toast(psT("copied"))}catch{toast("Clipboard indisponível")}};m.querySelector("#ps-execute").onclick=()=>sendHabbletCommand(m.querySelector("#ps-out").textContent);m.querySelector("#ps-save").onclick=()=>{const v=m.querySelector("#ps-out").textContent;if(!S.favorites.includes(v))S.favorites.push(v);persist();toast(psT("saved"))};update()}
+if(S.tab==="commands"){m.innerHTML='<h2>'+esc(psT("commands"))+'</h2><select id="ps-cmd">'+commands.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join("")+'</select><input id="ps-param" placeholder="'+esc(psT("parameter"))+'"><div class="out" id="ps-out"></div><div class="command-actions"><button id="ps-execute">Executar no Habblet</button><button id="ps-copy">Copiar</button><button id="ps-save">Salvar</button></div>';const update=()=>{const c=m.querySelector("#ps-cmd").value,p=m.querySelector("#ps-param").value.trim();m.querySelector("#ps-out").textContent=c+(p?":"+p:"")};m.querySelector("#ps-cmd").onchange=update;m.querySelector("#ps-param").oninput=update;m.querySelector("#ps-copy").onclick=async()=>{try{await navigator.clipboard.writeText(m.querySelector("#ps-out").textContent);toast(psT("copied"))}catch{toast("Clipboard indisponível")}};m.querySelector("#ps-execute").onclick=()=>sendHabbletCommand(m.querySelector("#ps-out").textContent);m.querySelector("#ps-save").onclick=()=>{const v=m.querySelector("#ps-out").textContent;if(!S.favorites.includes(v))S.favorites.push(v);persist();toast(psT("saved"))};update()}
 if(S.tab==="settings"){m.innerHTML='<h2>'+esc(psT("settings"))+'</h2><label>'+esc(psT("language"))+'<select id="ps-language">'+Object.entries(PIXELSQUAD_LANGUAGES).map(([k,v])=>'<option value="'+k+'" '+(k===psGetLanguage()?"selected":"")+'>'+esc(v.name)+'</option>').join("")+'</select></label><p class="muted">'+esc(psT("languageSaved"))+'</p><hr><small>PixelSquad v0.5.1 • '+esc(psT("creator"))+': Pricilao</small>';m.querySelector("#ps-language").onchange=e=>psSetLanguage(e.target.value)}}
 window.addEventListener("pixelsquad-language-change",()=>{if(document.getElementById("pixelsquad"))panel()});
 document.addEventListener("keydown",e=>{if(e.shiftKey&&e.key.toLowerCase()==="b"){e.preventDefault();panel()}});
