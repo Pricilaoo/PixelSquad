@@ -1,25 +1,105 @@
-name: Build and validate PixelSquad
+name: Build, release and publish PixelSquad
+
 on:
   push:
     branches: [main]
     paths: ['extension/**']
   workflow_dispatch:
+
+permissions:
+  contents: write
+
 jobs:
-  validate-and-build:
+  build-release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
       - name: Validate manifest
         run: node -e "JSON.parse(require('fs').readFileSync('extension/manifest.json','utf8')); console.log('manifest OK')"
+
       - name: Validate JavaScript
         run: |
           node --check extension/locales.js
           node --check extension/content.js
           node --check extension/popup.js
           node --check extension/toolsblet-importer.js
-      - name: Create extension ZIP
-        run: cd extension && zip -r ../PixelSquad-latest.zip . -x '*.DS_Store'
-      - uses: actions/upload-artifact@v4
+
+      - name: Install CRX builder
+        run: npm install --no-save crx3@2
+
+      - name: Read version
+        id: version
+        shell: bash
+        run: |
+          VERSION=$(node -p "require('./extension/manifest.json').version")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "PixelSquad version: $VERSION"
+
+      - name: Prepare signing key
+        env:
+          PIXELSQUAD_PRIVATE_KEY_B64: ${{ secrets.PIXELSQUAD_PRIVATE_KEY_B64 }}
+        run: |
+          test -n "$PIXELSQUAD_PRIVATE_KEY_B64" || {
+            echo "Missing repository secret PIXELSQUAD_PRIVATE_KEY_B64"
+            exit 1
+          }
+          printf '%s' "$PIXELSQUAD_PRIVATE_KEY_B64" | base64 --decode > /tmp/pixelsquad-key.pem
+          chmod 600 /tmp/pixelsquad-key.pem
+
+      - name: Build CRX3, ZIP and update manifest
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          CRX_URL="https://github.com/Pricilaoo/PixelSquad/releases/download/v$VERSION/PixelSquad-$VERSION.crx"
+          npx crx3 extension \
+            --key /tmp/pixelsquad-key.pem \
+            --crx "PixelSquad-$VERSION.crx" \
+            --zip "PixelSquad-$VERSION.zip" \
+            --xml "PixelSquad-update.xml" \
+            --appVersion "$VERSION" \
+            --crxURL "$CRX_URL"
+          mkdir -p updates
+          cp "PixelSquad-update.xml" updates/update.xml
+          test -s "PixelSquad-$VERSION.crx"
+          test -s "PixelSquad-$VERSION.zip"
+          test -s updates/update.xml
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: PixelSquad-latest
-          path: PixelSquad-latest.zip
+          tag_name: v${{ steps.version.outputs.version }}
+          name: PixelSquad v${{ steps.version.outputs.version }}
+          generate_release_notes: true
+          files: |
+            PixelSquad-${{ steps.version.outputs.version }}.crx
+            PixelSquad-${{ steps.version.outputs.version }}.zip
+
+      - name: Publish update.xml
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add updates/update.xml
+          if git diff --cached --quiet; then
+            echo "update.xml already current"
+          else
+            git commit -m "chore: publish PixelSquad update manifest [skip ci]"
+            git push origin HEAD:main
+          fi
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PixelSquad-v${{ steps.version.outputs.version }}
+          path: |
+            PixelSquad-${{ steps.version.outputs.version }}.crx
+            PixelSquad-${{ steps.version.outputs.version }}.zip
+            updates/update.xml
