@@ -1,14 +1,21 @@
-name: Build PixelSquad
+name: Build and validate PixelSquad
 on:
   push:
     branches: [main]
     paths: ['extension/**']
   workflow_dispatch:
 jobs:
-  build:
+  validate-and-build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Validate manifest
+        run: node -e "JSON.parse(require('fs').readFileSync('extension/manifest.json','utf8')); console.log('manifest OK')"
+      - name: Validate JavaScript
+        run: |
+          node --check extension/locales.js
+          node --check extension/content.js
+          node --check extension/popup.js
       - name: Create extension ZIP
         run: cd extension && zip -r ../PixelSquad-latest.zip . -x '*.DS_Store'
       - uses: actions/upload-artifact@v4
