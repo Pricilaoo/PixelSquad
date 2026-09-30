@@ -59,63 +59,17 @@ function findChatSendButton(input){
   for(const s of selectors){const b=near?.querySelector(s);if(b)return b}
   return [...(near?.querySelectorAll("button")||[])].find(b=>/^(enviar|send)$/i.test((b.innerText||b.textContent||"").trim()))||null;
 }
-function sendHabbletCommand(command){
+function bridgeCommand(command){
   const value=String(command||"").trim(); if(!value)return false;
-  const input=findChatInput();
-  if(!input){toast("Caixa de chat do Habblet não encontrada");return false}
-  setNativeValue(input,value);
-  const send=findChatSendButton(input);
-  if(send){
-    send.click();
-  }else if(input.isContentEditable){
-    input.dispatchEvent(new KeyboardEvent("keydown",{key:"Enter",code:"Enter",keyCode:13,which:13,bubbles:true,cancelable:true,composed:true}));
-    input.dispatchEvent(new KeyboardEvent("keypress",{key:"Enter",code:"Enter",keyCode:13,which:13,bubbles:true,cancelable:true,composed:true}));
-    input.dispatchEvent(new KeyboardEvent("keyup",{key:"Enter",code:"Enter",keyCode:13,which:13,bubbles:true,composed:true}));
-  }else{
-    const form=input.closest("form");
-    if(form?.requestSubmit) form.requestSubmit();
-    else if(form) form.dispatchEvent(new Event("submit",{bubbles:true,cancelable:true}));
-    else {
-      input.dispatchEvent(new KeyboardEvent("keydown",{key:"Enter",code:"Enter",keyCode:13,which:13,bubbles:true,cancelable:true,composed:true}));
-      input.dispatchEvent(new KeyboardEvent("keyup",{key:"Enter",code:"Enter",keyCode:13,which:13,bubbles:true,composed:true}));
-    }
-  }
-  emitAction("chat-command",{command:value});
-  toast("Enviado ao Habblet: "+value);
+  const requestId="ps_"+Date.now()+"_"+Math.random().toString(36).slice(2);
+  window.postMessage({source:"pixelsquad",type:"PS_COMMAND",requestId,command:value},"*");
+  emitAction("chat-command",{command:value,bridge:true});
+  toast("PixelSquad: enviando "+value);
   return true;
 }
-function avatarCommand(name,param=""){
-  const command=":"+name+(String(param).trim()?" "+String(param).trim():"");
-  return sendHabbletCommand(command);
-}
-function sitAvatar(){
-  const input=findChatInput();
-  if(!input){toast("Sentar: caixa de chat não encontrada");return false}
-  const tag=input.tagName.toLowerCase();
-  const placeholder=input.getAttribute("placeholder")||"";
-  setNativeValue(input,":sit");
-  input.focus();
-  const send=findChatSendButton(input);
-  const form=input.closest("form");
-  if(send){
-    send.click();
-    emitAction("sit",{command:":sit",method:"button",tag});
-    toast("Sentar: comando enviado pelo botão");
-    return true;
-  }
-  if(form?.requestSubmit){
-    form.requestSubmit();
-    emitAction("sit",{command:":sit",method:"form",tag});
-    toast("Sentar: comando enviado pelo formulário");
-    return true;
-  }
-  for(const type of ["keydown","keypress","keyup"]){
-    input.dispatchEvent(new KeyboardEvent(type,{key:"Enter",code:"Enter",keyCode:13,which:13,bubbles:true,cancelable:true,composed:true}));
-  }
-  emitAction("sit",{command:":sit",method:"keyboard",tag});
-  toast("Sentar: chat localizado ("+tag+(placeholder? ", "+placeholder:"")+"), mas o cliente não confirmou o envio");
-  return true;
-}
+function sendHabbletCommand(command){ return bridgeCommand(command); }
+function avatarCommand(name,param=""){ return bridgeCommand(":"+name+(String(param).trim()?" "+String(param).trim():"")); }
+function sitAvatar(){ return bridgeCommand(":sit"); }
 function tryClientAction(action,data={}){const selectors={
 select:["[data-id][class*=furni]","[class*=furni][class*=selected]","[data-furni-id]"],
 undo:["button[aria-label*=undo i]","button[title*=undo i]"],
@@ -138,6 +92,14 @@ if(S.tab==="wired"){m.innerHTML='<div class="row"><h2>'+esc(psT("wired"))+'</h2>
 if(S.tab==="effects"){const names=["enable","fastwalk","handitem","kickpower","moonwalk","sit","lay","lock","roommute","walkthrough","clickthrough","randomstate","tag","showgroupforum"];m.innerHTML='<h2>'+esc(psT("effects"))+'</h2><input id="ps-effect-search" placeholder="'+esc(psT("search"))+'..."><div class="effectgrid" id="ps-effects"></div>';const list=()=>{const q=m.querySelector("#ps-effect-search").value.toLowerCase();m.querySelector("#ps-effects").innerHTML=names.filter(x=>x.includes(q)).map(x=>'<button class="effect" data-command="'+x+'">★ '+x+'</button>').join("")};m.querySelector("#ps-effect-search").oninput=list;m.onclick=async e=>{const b=e.target.closest("[data-command]");if(!b)return;const cmd=b.dataset.command;if(!S.favorites.includes(cmd))S.favorites.push(cmd);persist();avatarCommand(cmd)};list()}
 if(S.tab==="commands"){m.innerHTML='<h2>'+esc(psT("commands"))+'</h2><select id="ps-cmd">'+commands.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join("")+'</select><input id="ps-param" placeholder="'+esc(psT("parameter"))+'"><div class="out" id="ps-out"></div><div class="command-actions"><button id="ps-execute">Executar no Habblet</button><button id="ps-copy">Copiar</button><button id="ps-save">Salvar</button></div>';const update=()=>{const c=m.querySelector("#ps-cmd").value,p=m.querySelector("#ps-param").value.trim();m.querySelector("#ps-out").textContent=c+(p?":"+p:"")};m.querySelector("#ps-cmd").onchange=update;m.querySelector("#ps-param").oninput=update;m.querySelector("#ps-copy").onclick=async()=>{try{await navigator.clipboard.writeText(m.querySelector("#ps-out").textContent);toast(psT("copied"))}catch{toast("Clipboard indisponível")}};m.querySelector("#ps-execute").onclick=()=>sendHabbletCommand(m.querySelector("#ps-out").textContent);m.querySelector("#ps-save").onclick=()=>{const v=m.querySelector("#ps-out").textContent;if(!S.favorites.includes(v))S.favorites.push(v);persist();toast(psT("saved"))};update()}
 if(S.tab==="settings"){m.innerHTML='<h2>'+esc(psT("settings"))+'</h2><label>'+esc(psT("language"))+'<select id="ps-language">'+Object.entries(PIXELSQUAD_LANGUAGES).map(([k,v])=>'<option value="'+k+'" '+(k===psGetLanguage()?"selected":"")+'>'+esc(v.name)+'</option>').join("")+'</select></label><p class="muted">'+esc(psT("languageSaved"))+'</p><hr><small>PixelSquad v0.5.1 • '+esc(psT("creator"))+': Pricilao</small>';m.querySelector("#ps-language").onchange=e=>psSetLanguage(e.target.value)}}
+window.addEventListener("message",e=>{
+  if(e.source!==window||e.data?.source!=="pixelsquad")return;
+  if(e.data.type==="PS_RESULT"){
+    const r=e.data.result||{};
+    if(r.ok)toast("Habblet: "+(r.method||"ação")+" executado");
+    else toast("Habblet: "+(r.error||"não foi possível executar"));
+  }
+});
 window.addEventListener("pixelsquad-language-change",()=>{if(document.getElementById("pixelsquad"))panel()});
 document.addEventListener("keydown",e=>{if(e.shiftKey&&e.key.toLowerCase()==="b"){e.preventDefault();panel()}});
 try{chrome.storage.local.get(["pixelsquad_enables"]).then(r=>{S.enables=Array.isArray(r.pixelsquad_enables)?r.pixelsquad_enables:[];if(document.getElementById("pixelsquad"))render()})}catch{}
