@@ -71,7 +71,7 @@ if(S.tab==="visuals"){m.innerHTML='<h2>Visuais</h2><div class="tools"><button da
 if(S.tab==="room"){const r=[["bfloor","Floor Plan"],["floor","Editor chão/parede"],["home","Cafofo"],["roommute","Silenciar"],["lock","Trancar"],["wired","Ocultar Wired"],["autofloor","Limpar pisos vazios"],["pyramid","Pirâmides Wired"],["playtest","Modo teste"],["pickall","Recolher meus mobis"],["pickwired","Recolher Wireds"]];m.innerHTML='<h2>Quarto</h2><div class="tools">'+r.map(x=>'<button data-room="'+x[0]+'">'+esc(x[1])+'</button>').join("")+'</div>';m.onclick=e=>{const b=e.target.closest("[data-room]");if(b)cmd(b.dataset.room)}}
 if(S.tab==="enables"||S.tab==="handitems"){
 const isHand=S.tab==="handitems", key=isHand?"pixelsquad_handitems":"pixelsquad_enables", title=isHand?"Handitems":"Efeitos / Enables", icon=isHand?"🎁":"✋", actionName=isHand?"handitem":"enable";
-m.innerHTML='<div class="row"><h2>'+icon+' '+title+'</h2><input id="ps-enable-search" placeholder="Pesquisar por número ou nome..."></div><div class="filters"><button data-catalog-tab="enables">Efeitos</button><button data-catalog-tab="handitems">Handitems</button><button id="ps-item-favorites" aria-pressed="false">☆ Favoritos</button></div><div class="enable-actions"><button id="ps-enable-refresh">Atualizar lista</button><span id="ps-enable-count" class="muted">0 itens</span></div><div class="enablegrid" id="ps-enable-list"></div><div class="status">Clique em um item para ativá-lo automaticamente no personagem. O número grande é a posição na lista; o ID abaixo é o código do jogo. Catálogo adaptado por Pricilao. Prévias do catálogo enviado: Bananablet.</div>';
+m.innerHTML='<div class="row"><h2>'+icon+' '+title+'</h2><input id="ps-enable-search" placeholder="Pesquisar por número ou nome..."></div><div class="filters"><button data-catalog-tab="enables">Efeitos</button><button data-catalog-tab="handitems">Handitems</button><button id="ps-item-favorites" aria-pressed="false">☆ Favoritos</button></div><div class="enable-actions"><button id="ps-enable-refresh">Atualizar lista</button><span id="ps-enable-count" class="muted">0 itens</span></div><div class="enablegrid" id="ps-enable-list"></div>';
 let onlyFavorites=false;
 const list=()=>{
 if(!m.isConnected||S.tab!==(isHand?"handitems":"enables"))return;
@@ -83,7 +83,7 @@ m.querySelector("#ps-enable-count").textContent=arr.length+" itens";
 m.querySelector("#ps-enable-list").innerHTML=arr.map(x=>{
 const i=source.indexOf(x)+1;
 return '<article class="enable-card"><div class="enable-number">'+i+'</div><button class="ps-item-star" data-item-favorite="'+esc(actionName+":"+x.id)+'" aria-label="Favoritar '+esc(x.name)+'" aria-pressed="'+S.itemFavorites.includes(actionName+":"+x.id)+'">'+(S.itemFavorites.includes(actionName+":"+x.id)?"★":"☆")+'</button><img loading="lazy" decoding="async" alt="'+esc(x.name)+'" src="'+esc(x.image)+'"><div class="enable-info"><strong>'+esc(x.name)+'</strong><b>ID #'+esc(x.id)+'</b><button data-item-action="'+actionName+'" data-item-id="'+esc(x.id)+'">Ativar</button></div></article>'
-}).join("")||'<div class="status">Nenhum item importado. Abra o ToolsBlet e use a página de '+title.toLowerCase()+' para importar a coleção.</div>';
+}).join("")||'<div class="status">Nenhum item encontrado.</div>';
 };
 m.querySelector("#ps-enable-search").oninput=list;m.querySelector("#ps-item-favorites").onclick=e=>{onlyFavorites=!onlyFavorites;e.currentTarget.setAttribute("aria-pressed",String(onlyFavorites));list()};
 m.querySelector("#ps-enable-refresh").onclick=async()=>{
