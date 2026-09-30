@@ -1,13 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" shape-rendering="crispEdges">
-<rect width="64" height="64" rx="12" fill="#111827"/>
-<path d="M10 25h5v-7h7v-6h20v6h7v7h5v23H47v7H17v-7h-7z" fill="#0a101b"/>
-<path d="M16 22h6v-5h20v5h6v24H16z" fill="#18283a"/>
-<rect x="19" y="23" width="10" height="13" rx="2" fill="#d9dee5"/>
-<rect x="35" y="23" width="10" height="13" rx="2" fill="#d9dee5"/>
-<rect x="22" y="27" width="4" height="6" fill="#111827"/>
-<rect x="38" y="27" width="4" height="6" fill="#111827"/>
-<path d="M25 39h14v4H25z" fill="#f28b22"/>
-<path d="M29 43h6v5h-6z" fill="#d85a1f"/>
-<rect x="12" y="49" width="40" height="4" fill="#263b52"/>
-<rect x="20" y="53" width="24" height="3" fill="#0a101b"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+<defs>
+ <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#59fff2"/><stop offset=".45" stop-color="#c96cff"/><stop offset="1" stop-color="#fff08a"/></linearGradient>
+ <linearGradient id="body" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#09090d"/><stop offset=".7" stop-color="#11111a"/><stop offset="1" stop-color="#303646"/></linearGradient>
+</defs>
+<rect width="128" height="128" fill="#000"/>
+<path d="M31 91C24 79 27 59 31 47L29 27L45 35C54 30 74 29 84 35L101 27L97 48C103 60 106 79 97 91C88 103 40 103 31 91Z" fill="url(#body)" stroke="url(#g)" stroke-width="3"/>
+<path d="M31 47L29 27L45 35" fill="none" stroke="#7ffcff" stroke-width="2"/>
+<path d="M97 48L101 27L84 35" fill="none" stroke="#ffe6a0" stroke-width="2"/>
+<circle cx="49" cy="55" r="4.5" fill="#fff"/>
+<circle cx="79" cy="55" r="4.5" fill="#fff"/>
+<path d="M62 52q5 6 10 0" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+<path d="M66 61q-4 4 0 7q4-3 0-7" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+<path d="M25 63l-14-4M25 69l-16 0M26 75l-13 5M103 63l14-4M103 69l16 0M102 75l13 5" stroke="url(#g)" stroke-width="1.4" stroke-linecap="round"/>
+<path d="M31 92Q64 104 97 92" fill="none" stroke="url(#g)" stroke-width="3"/>
 </svg>
