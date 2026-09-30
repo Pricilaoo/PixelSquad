@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "PixelSquad",
-  "version": "0.4.0",
-  "description": "Ferramentas de construção, Wired e automação de interface para Habblet. Criado por Pricilao.",
+  "version": "0.4.1",
+  "description": "Ferramentas de construção, Wired e automação de interface para Habblet. Criado por Pricilao. Versão de teste 0.4.1.",
   "permissions": [
     "storage",
     "activeTab"
