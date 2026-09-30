@@ -84,7 +84,31 @@ function sendHabbletCommand(command){
   toast("Enviado ao Habblet: "+value);
   return true;
 }
-function avatarCommand(name,param=""){return sendHabbletCommand(":"+name+(String(param).trim()?" "+String(param).trim():""))}
+function avatarCommand(name,param=""){
+  const command=":"+name+(String(param).trim()?" "+String(param).trim():"");
+  return sendHabbletCommand(command);
+}
+function sitAvatar(){
+  const input=findChatInput();
+  if(!input){toast("Chat do Habblet não encontrado");return false}
+  setNativeValue(input,":sit");
+  input.focus();
+  const send=findChatSendButton(input);
+  if(send){
+    send.click();
+  }else{
+    const form=input.closest("form");
+    if(form?.requestSubmit) form.requestSubmit();
+    else{
+      for(const type of ["keydown","keypress","keyup"]){
+        input.dispatchEvent(new KeyboardEvent(type,{key:"Enter",code:"Enter",keyCode:13,which:13,bubbles:true,cancelable:true,composed:true}));
+      }
+    }
+  }
+  emitAction("sit",{command:":sit"});
+  toast("Sentar executado");
+  return true;
+}
 function tryClientAction(action,data={}){const selectors={
 select:["[data-id][class*=furni]","[class*=furni][class*=selected]","[data-furni-id]"],
 undo:["button[aria-label*=undo i]","button[title*=undo i]"],
@@ -98,7 +122,7 @@ if(S.tab==="home")m.innerHTML='<section class="hero"><h2>PixelSquad</h2><p>Ferra
 if(S.tab==="avatar"){
   const avatarTools=[["sit","Sentar",false],["lay","Deitar",false],["jump","Pular",false],["moonwalk","Moonwalk",false],["cara","Esconder rosto",false],["kiss","Beijo",false],["enable","Efeito",true],["handitem","Handitem",true],["sign","Placa",true]];
   m.innerHTML='<h2>Personagem</h2><p class="muted">Comandos executados pelo chat nativo do Habblet.</p><div class="avatar-grid">'+avatarTools.map(x=>'<button class="avatar-tool" data-avatar-command="'+x[0]+'" data-needs-param="'+x[2]+'">'+x[1]+'</button>').join('')+'</div><input id="ps-avatar-param" placeholder="ID para efeito / handitem / placa"><button id="ps-avatar-custom">Executar comando</button><div class="status">Pronto.</div>';
-  m.onclick=e=>{const b=e.target.closest("[data-avatar-command]");if(!b)return;const needs=b.dataset.needsParam==="true",param=m.querySelector("#ps-avatar-param").value.trim();if(needs&&!param){toast("Informe o ID primeiro");return}avatarCommand(b.dataset.avatar-command,param)};
+  m.onclick=e=>{const b=e.target.closest("[data-avatar-command]");if(!b)return;const needs=b.dataset.needsParam==="true",param=m.querySelector("#ps-avatar-param").value.trim();if(needs&&!param){toast("Informe o ID primeiro");return}((b.dataset.avatar-command==="sit")?sitAvatar():avatarCommand(b.dataset.avatar-command,param))};
   m.querySelector("#ps-avatar-custom").onclick=()=>{const raw=m.querySelector("#ps-avatar-param").value.trim();if(!raw){toast("Digite um comando, por exemplo :sit");return}sendHabbletCommand(raw.startsWith(":")?raw:":"+raw)};
 }
 if(S.tab==="build"){m.innerHTML='<h2>'+esc(psT("build"))+'</h2><div class="tools">'+buildTools.map(([id,label])=>'<button class="tool" data-action="'+id+'">'+esc(psT(id)===id?label:psT(id))+'</button>').join("")+'</div><label>'+esc(psT("height"))+'<input id="ps-height" type="number" step="0.5" value="'+S.height+'"></label><label>'+esc(psT("direction"))+'<select id="ps-direction"><option value="0">0°</option><option value="90">90°</option><option value="180">180°</option><option value="270">270°</option></select></label><div class="status" id="build-status">'+esc(psT("ready"))+'</div>';m.querySelector("#ps-direction").value=String(S.direction);m.querySelector("#ps-height").onchange=e=>{S.height=Number(e.target.value)||0;persist();emitAction("height",{value:S.height})};m.querySelector("#ps-direction").onchange=e=>{S.direction=Number(e.target.value);persist();emitAction("direction",{value:S.direction})};m.querySelector(".tools").onclick=e=>{const b=e.target.closest("[data-action]");if(!b)return;tryClientAction(b.dataset.action,{height:S.height,direction:S.direction});if(b.dataset.action==="up"){S.height+=0.5;m.querySelector("#ps-height").value=S.height;persist()}if(b.dataset.action==="down"){S.height-=0.5;m.querySelector("#ps-height").value=S.height;persist()}if(b.dataset.action==="rotate"){S.direction=(S.direction+90)%360;m.querySelector("#ps-direction").value=S.direction;persist()}}}
