@@ -133,3 +133,6 @@
     height:48px!important;
   }
 }
+
+#pixelsquad-launch img{display:block!important;width:100%!important;height:100%!important;object-fit:cover!important;border-radius:10px!important}
+#pixelsquad-launch::before{display:none!important}
