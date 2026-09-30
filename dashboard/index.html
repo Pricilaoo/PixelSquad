@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PixelSquad — Painel do Criador</title>
+<style>
+body{margin:0;font-family:Inter,system-ui,Arial;background:#0b0d12;color:#f4f5f7}main{max-width:1000px;margin:auto;padding:32px}.card{background:#141821;border:1px solid #2a3040;border-radius:16px;padding:22px;margin:16px 0}.brand{display:flex;justify-content:space-between;align-items:center;gap:20px}.badge{padding:7px 11px;border-radius:999px;background:#202838;color:#9ee7ff;font-size:13px}textarea{width:100%;min-height:150px;box-sizing:border-box;background:#0d1118;color:#fff;border:1px solid #303849;border-radius:10px;padding:12px;resize:vertical}button{background:#6ee7ff;border:0;border-radius:10px;padding:11px 16px;font-weight:700;cursor:pointer;margin-top:10px}small{color:#9ca3af}.req{border-top:1px solid #2a3040;padding:12px 0}.muted{color:#aeb6c5}
+</style>
+</head>
+<body><main>
+<div class="card brand"><div><h1>PixelSquad</h1><div class="muted">Painel do Criador</div></div><div class="badge">Criador: Pricilao</div></div>
+<div class="card"><h2>Estado</h2><p>Versão publicada: <strong id="version">carregando...</strong></p><p>Canal: <strong>main</strong></p><p><small>Pedidos registrados neste navegador ficam salvos localmente até o projeto ser conectado a um backend/GitHub.</small></p></div>
+<div class="card"><h2>O que você quer adicionar?</h2><textarea id="request" placeholder="Ex.: Adicionar um botão para copiar a configuração do Wired selecionado."></textarea><br><button onclick="saveRequest()">Registrar pedido</button></div>
+<div class="card"><h2>Pedidos registrados</h2><div id="requests" class="muted">Nenhum pedido ainda.</div></div>
+</main>
+<script>
+const KEY='pixelsquad_requests';
+function render(){const a=JSON.parse(localStorage.getItem(KEY)||'[]');document.querySelector('#requests').innerHTML=a.length?a.map((x,i)=>`<div class="req"><strong>#${i+1}</strong> — ${escapeHtml(x.text)}<br><small>${new Date(x.date).toLocaleString('pt-BR')}</small></div>`).join(''):'Nenhum pedido ainda.'}
+function saveRequest(){const el=document.querySelector('#request');const text=el.value.trim();if(!text)return;const a=JSON.parse(localStorage.getItem(KEY)||'[]');a.unshift({text,date:new Date().toISOString()});localStorage.setItem(KEY,JSON.stringify(a));el.value='';render()}
+function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+fetch('../extension/manifest.json').then(r=>r.json()).then(m=>document.querySelector('#version').textContent=m.version).catch(()=>document.querySelector('#version').textContent='0.3.0');render();
+</script></body></html>
