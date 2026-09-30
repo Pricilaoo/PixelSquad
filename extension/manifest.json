@@ -68,5 +68,17 @@
       ],
       "run_at": "document_idle"
     }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "icons/icon128.png",
+        "icons/pixelsquad-logo.svg"
+      ],
+      "matches": [
+        "https://www.habblet.city/*",
+        "https://*.habblet.city/*"
+      ]
+    }
   ]
 }
