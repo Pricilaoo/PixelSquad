@@ -201,3 +201,7 @@
 #pixelsquad .tools button,#pixelsquad .grid article button{margin-top:7px}
 #pixelsquad textarea{width:100%;box-sizing:border-box;background:#0d1320;color:#fff;border:1px solid #303d58;border-radius:8px;padding:9px;resize:vertical}
 #pixelsquad .grid article{min-height:90px}
+
+/* Tradução simultânea */
+.pixelsquad-translation{display:flex!important;flex-direction:column!important;gap:2px!important;margin-top:3px!important;padding:3px 6px!important;border-left:2px solid #00dcbf!important;background:#0b1320!important;color:#dff!important;font-size:.92em!important;line-height:1.25!important;border-radius:3px!important}
+.pixelsquad-translation-original{font-size:.8em!important;color:#8290a9!important;font-style:italic!important}
