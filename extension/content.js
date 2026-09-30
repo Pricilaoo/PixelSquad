@@ -90,23 +90,30 @@ function avatarCommand(name,param=""){
 }
 function sitAvatar(){
   const input=findChatInput();
-  if(!input){toast("Chat do Habblet não encontrado");return false}
+  if(!input){toast("Sentar: caixa de chat não encontrada");return false}
+  const tag=input.tagName.toLowerCase();
+  const placeholder=input.getAttribute("placeholder")||"";
   setNativeValue(input,":sit");
   input.focus();
   const send=findChatSendButton(input);
+  const form=input.closest("form");
   if(send){
     send.click();
-  }else{
-    const form=input.closest("form");
-    if(form?.requestSubmit) form.requestSubmit();
-    else{
-      for(const type of ["keydown","keypress","keyup"]){
-        input.dispatchEvent(new KeyboardEvent(type,{key:"Enter",code:"Enter",keyCode:13,which:13,bubbles:true,cancelable:true,composed:true}));
-      }
-    }
+    emitAction("sit",{command:":sit",method:"button",tag});
+    toast("Sentar: comando enviado pelo botão");
+    return true;
   }
-  emitAction("sit",{command:":sit"});
-  toast("Sentar executado");
+  if(form?.requestSubmit){
+    form.requestSubmit();
+    emitAction("sit",{command:":sit",method:"form",tag});
+    toast("Sentar: comando enviado pelo formulário");
+    return true;
+  }
+  for(const type of ["keydown","keypress","keyup"]){
+    input.dispatchEvent(new KeyboardEvent(type,{key:"Enter",code:"Enter",keyCode:13,which:13,bubbles:true,cancelable:true,composed:true}));
+  }
+  emitAction("sit",{command:":sit",method:"keyboard",tag});
+  toast("Sentar: chat localizado ("+tag+(placeholder? ", "+placeholder:"")+"), mas o cliente não confirmou o envio");
   return true;
 }
 function tryClientAction(action,data={}){const selectors={
