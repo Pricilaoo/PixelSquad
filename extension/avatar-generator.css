@@ -1,0 +1,13 @@
+#pixelsquad-avatar-generator { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:1000000; width:min(380px,calc(100vw - 24px)); max-height:calc(100vh - 24px); overflow:auto; box-sizing:border-box; padding:16px; border:1px solid #00dcbf; border-radius:16px; background:#111725; color:#edf2ff; box-shadow:0 12px 48px #0009; font:14px/1.4 system-ui,sans-serif; }
+#pixelsquad-avatar-generator header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+#pixelsquad-avatar-generator label { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+#pixelsquad-avatar-generator button,#pixelsquad-avatar-generator select { border:1px solid #00dcbf60; border-radius:8px; padding:8px; color:#edf2ff; background:#1c2b3d; cursor:pointer; font:inherit; }
+#pixelsquad-avatar-generator button:disabled { opacity:.4; cursor:default; }
+#pixelsquad-avatar-generator button:focus-visible,#pixelsquad-avatar-generator select:focus-visible { outline:2px solid #00dcbf; outline-offset:2px; }
+#pixelsquad-avatar-generator .ps-avatar-preview { display:flex; justify-content:center; align-items:center; min-height:210px; margin-top:12px; border-radius:12px; background:radial-gradient(ellipse at center,#00dcbf20,#151d2e); }
+#pixelsquad-avatar-generator img { image-rendering:pixelated; max-height:205px; max-width:100%; }
+#pixelsquad-avatar-generator img[hidden] { display:none; }
+#pixelsquad-avatar-generator .ps-avatar-buttons { display:flex; flex-wrap:wrap; gap:8px; }
+#pixelsquad-avatar-generator [data-action=generate] { background:#007e72; }
+#pixelsquad-avatar-generator textarea { box-sizing:border-box; width:100%; margin-top:12px; resize:vertical; background:#151d2e; color:#edf2ff; border:1px solid #ffffff30; border-radius:8px; padding:8px; }
+#pixelsquad-avatar-generator small { color:#b6c6db; }

@@ -1,0 +1,19 @@
+#pixelsquad-performance {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 99999;
+  display: flex;
+  gap: 12px;
+  padding: 8px 12px;
+  border: 1px solid #00dcbf80;
+  border-radius: 10px;
+  background: #111725e8;
+  color: #edf2ff;
+  box-shadow: 0 3px 12px #0005;
+  font: 600 12px/1.4 system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+#pixelsquad-performance[hidden] { display: none; }
+#pixelsquad-performance span:first-child { color: #00dcbf; }

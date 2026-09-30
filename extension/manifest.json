@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "PixelSquad",
-  "version": "0.5.3.12",
+  "version": "0.5.3.13",
   "description": "Painel unificado de construção, Wired, visuais, chat, tradução, Enables e Handitems para Habblet. Criado por Pricilao.",
   "permissions": [
     "storage",
@@ -56,10 +56,12 @@
       "js": [
         "locales.js",
         "translation.js",
+        "avatar-generator.js",
         "content.js"
       ],
       "css": [
-        "content.css"
+        "content.css",
+        "avatar-generator.css"
       ],
       "run_at": "document_idle",
       "world": "ISOLATED"
@@ -108,6 +110,45 @@
       ],
       "run_at": "document_idle",
       "world": "ISOLATED",
+      "all_frames": true
+    },
+    {
+      "matches": [
+        "https://www.habblet.city/*",
+        "https://*.habblet.city/*"
+      ],
+      "js": [
+        "performance-bridge.js"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN",
+      "all_frames": true
+    },
+    {
+      "matches": [
+        "https://www.habblet.city/*",
+        "https://*.habblet.city/*"
+      ],
+      "js": [
+        "performance-hud.js"
+      ],
+      "css": [
+        "performance-hud.css"
+      ],
+      "run_at": "document_idle",
+      "world": "ISOLATED",
+      "all_frames": true
+    },
+    {
+      "matches": [
+        "https://www.habblet.city/*",
+        "https://*.habblet.city/*"
+      ],
+      "js": [
+        "avatar-bridge.js"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN",
       "all_frames": true
     }
   ],
