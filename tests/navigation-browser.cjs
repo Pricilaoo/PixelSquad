@@ -111,7 +111,7 @@ async function validateControls(page) {
     await page.evaluate(() => {
       window.nativeChats = [];
       document.body.addEventListener('keydown', event => {
-        if (event.key === 'Enter') window.nativeChats.push(event.target.value);
+        if (event.key === 'Enter' && event.target.matches('.chat-input')) window.nativeChats.push(event.target.value);
       });
     });
     const cdp = await page.context().newCDPSession(page);
