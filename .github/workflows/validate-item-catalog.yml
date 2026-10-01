@@ -2,7 +2,7 @@ name: Validate PixelSquad item catalogs
 
 on:
   push:
-    branches: ['draft/handitems-cleanup-05315']
+    branches: ['draft/handitems-cleanup-05315', 'draft/creator-pixel-05316']
     paths:
       - 'extension/**'
       - 'tests/**'
@@ -32,3 +32,5 @@ jobs:
         run: npm install --prefix tests --ignore-scripts --no-audit --no-fund
       - name: Validate UI, catalogs and existing features
         run: npm test --prefix tests
+      - name: Validate chat and creator across browser frames
+        run: npm run test:browser --prefix tests

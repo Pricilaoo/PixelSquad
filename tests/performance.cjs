@@ -8,7 +8,7 @@ function packet(header, id) {
   return b;
 }
 let now = 0, visible = true, game = true;
-const events = {}, ticks = new Map(), messages = []; let counter = 0;
+const events = {}, documentEvents = {}, ticks = new Map(), messages = []; let counter = 0;
 class Socket {
   static OPEN = 1;
   constructor() { this.readyState = 1; this.sent = []; this.listeners = {}; }
@@ -17,7 +17,7 @@ class Socket {
   emit(type, data) { for (const f of this.listeners[type] || []) f({data}); }
 }
 const win = {WebSocket: Socket, addEventListener: (type, f) => events[type] = f, postMessage: data => messages.push(data)};
-const context = vm.createContext({window: win, document: {get hidden() {return !visible}, querySelector: () => game},
+const context = vm.createContext({window: win, document: {get hidden() {return !visible}, querySelector: () => game, addEventListener:(type,f)=>documentEvents[type]=f},
   location: {origin: 'https://www.habblet.city'}, performance: {now: () => now}, ArrayBuffer, Uint8Array, DataView, Blob,
   Proxy, Reflect, URL, setInterval: f => {ticks.set(++counter, f); return counter}, clearInterval: id => ticks.delete(id)});
 vm.runInContext(fs.readFileSync(root + '/performance-bridge.js', 'utf8'), context);
@@ -46,6 +46,38 @@ const profileCount = reconnect.sent.length;
 events.message({source:{},origin:'https://other.example',data:{source:'pixelsquad',type:'PS_OPEN_CREATOR'}});
 assert.equal(reconnect.sent.length,profileCount);
 console.log('PASS: correlated game RTT, unknown socket isolation, native socket semantics, timeout, hidden page and reconnection');
+
+function profilePacket(id,name='Pricilao.') {
+ const b=new ArrayBuffer(40+name.length),view=new DataView(b);
+ view.setUint32(0,b.byteLength-4);view.setUint16(4,3898);view.setInt32(6,id);view.setUint16(10,name.length);
+ for(let i=0;i<name.length;i++)view.setUint8(12+i,name.charCodeAt(i));
+ view.setUint8(b.byteLength-1,1);return b;
+}
+function directCreator(requestId) {
+ const event={detail:{requestId},defaultPrevented:false,preventDefault(){this.defaultPrevented=true}};
+ documentEvents['pixelsquad-open-creator'](event);return event;
+}
+assert(directCreator('creator-first').defaultPrevented);
+assert.equal(new DataView(reconnect.sent.at(-1)).getUint16(4),2249);
+const once=reconnect.sent.length;
+events.message({source:win,origin:'https://www.habblet.city',data:{source:'pixelsquad',type:'PS_OPEN_CREATOR',requestId:'creator-first'}});
+assert.equal(reconnect.sent.length,once);
+unrelated.emit('message',profilePacket(999));reconnect.emit('message',profilePacket(999,'Pricilao'));
+assert(directCreator('creator-before-confirmation').defaultPrevented);
+assert.equal(new DataView(reconnect.sent.at(-1)).getUint16(4),2249);
+const response=profilePacket(12345),prefix=packet(123),combined=new Uint8Array(prefix.byteLength+response.byteLength);
+combined.set(new Uint8Array(prefix));combined.set(new Uint8Array(response),prefix.byteLength);
+reconnect.emit('message',combined);
+assert(directCreator('creator-cached').defaultPrevented);
+const cachedProfile=new DataView(reconnect.sent.at(-1));
+assert.equal(cachedProfile.byteLength,11);assert.equal(cachedProfile.getUint16(4),3265);assert.equal(cachedProfile.getInt32(6),12345);assert.equal(cachedProfile.getUint8(10),1);
+const directCount=reconnect.sent.length;
+assert(!directCreator('').defaultPrevented);assert(!directCreator(123).defaultPrevented);
+game=false;assert(!directCreator('not-ready').defaultPrevented);game=true;
+assert.equal(reconnect.sent.length,directCount);
+const nextSession=new win.WebSocket();nextSession.emit('message',packet(2491));
+assert(directCreator('new-session').defaultPrevented);assert.equal(new DataView(nextSession.sent.at(-1)).getUint16(4),2249);
+console.log('PASS: synchronous creator click, one request per click, exact nickname with dot, confirmed ID shortcut, native open-window flag and per-connection cache');
 
 const {window: dom} = parseHTML('<html><body><div class="nitro-toolbar"></div></body></html>');
 delete dom.__PIXELSQUAD_PERFORMANCE_HUD__;

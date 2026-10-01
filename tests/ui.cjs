@@ -47,6 +47,21 @@ f.open();assert.equal(f.document.querySelector('#pixelsquad').style.getPropertyV
 f.document.querySelector('#ps-close').click();assert.equal(f.resize.size,0);
 console.log('PASS: corrupt preferences, retired tab migration, tab rendering, nine appearance controls, persistence and drag-listener cleanup');
 
+const creatorFixture=fixture();creatorFixture.run('locales.js');creatorFixture.run('content.js');creatorFixture.open();
+const creatorButton=creatorFixture.document.querySelector('#ps-creator');
+assert.equal(creatorButton.textContent,'Feito por Pricilao.');
+assert.equal(creatorButton.getAttribute('aria-label'),'Abrir perfil de Pricilao.');
+const directClicks=[],profileMessages=[],frameMessages=[];let handled=true;
+creatorFixture.document.addEventListener('pixelsquad-open-creator',event=>{directClicks.push(event.detail.requestId);if(handled)event.preventDefault()});
+creatorFixture.window.postMessage=message=>profileMessages.push(message);
+const profileFrame=creatorFixture.document.createElement('iframe');
+Object.defineProperty(profileFrame,'contentWindow',{value:{postMessage:message=>frameMessages.push(message)}});creatorFixture.document.body.appendChild(profileFrame);
+creatorButton.click();assert.equal(directClicks.length,1);assert.equal(profileMessages.length,0);assert.equal(frameMessages.length,0);
+handled=false;creatorButton.click();assert.equal(directClicks.length,2);assert.notEqual(directClicks[0],directClicks[1]);
+assert.equal(profileMessages.length,1);assert.equal(frameMessages.length,1);
+assert.equal(profileMessages[0].type,'PS_OPEN_CREATOR');assert.equal(profileMessages[0].requestId,directClicks[1]);assert.equal(frameMessages[0].requestId,directClicks[1]);
+console.log('PASS: full creator credit is clickable, synchronous local delivery and iframe fallback with one request ID');
+
 const catalogFixture=fixture();catalogFixture.run('effects-catalog.js');catalogFixture.run('handitems-catalog.js');catalogFixture.run('locales.js');catalogFixture.run('content.js');catalogFixture.open();
 catalogFixture.document.querySelector('[data-tab=enables]').click();
 assert.equal(catalogFixture.document.querySelectorAll('.enable-card').length,465);

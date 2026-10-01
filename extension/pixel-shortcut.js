@@ -2,12 +2,13 @@
   if (window.__PIXELSQUAD_PIXEL_SHORTCUT__) return;
   window.__PIXELSQUAD_PIXEL_SHORTCUT__ = true;
   const fieldSelector = 'textarea,input[type="text"],input:not([type]),[contenteditable="true"]';
+  const chatSelector = '.nitro-chat-input,.nitro-chat-input-container,#toolbar-chat-input-container';
   function chatField(target) {
     if (!document.querySelector('.nitro-toolbar') || target?.closest?.('#pixelsquad,#pixelsquad-avatar-generator')) return null;
     const field = target?.closest?.(fieldSelector);
     if (!field) return null;
     const placeholder = field.getAttribute('placeholder') || '';
-    if (!field.closest('.nitro-chat-input') && !/falar|digite.*mensagem|mensagem|say|chat/i.test(placeholder)) return null;
+    if (!field.closest(chatSelector) && !/falar|digite.*mensagem|mensagem|say|chat/i.test(placeholder)) return null;
     return field;
   }
   function consume(event, field) {
@@ -27,7 +28,7 @@
     return true;
   }
   document.addEventListener('keydown', event => {
-    if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) consume(event, chatField(event.target));
+    if ((event.key === 'Enter' || event.key === 'NumpadEnter') && !event.shiftKey && !event.isComposing) consume(event, chatField(event.target));
   }, true);
   document.addEventListener('submit', event => {
     const field = event.target?.querySelector?.(fieldSelector); consume(event, chatField(field));
@@ -35,7 +36,9 @@
   document.addEventListener('click', event => {
     const button = event.target?.closest?.('button,[role="button"]');
     if (!button) return;
-    const container = button.closest('.nitro-chat-input,form');
+    const label = [button.textContent, button.getAttribute('aria-label'), button.getAttribute('title')].join(' ');
+    if (button.getAttribute('type') !== 'submit' && !/\b(enviar|send)\b/i.test(label) && !button.hasAttribute('data-chat-send')) return;
+    const container = button.closest(chatSelector + ',form');
     const field = container?.querySelector(fieldSelector); consume(event, chatField(field));
   }, true);
 })();
