@@ -39,6 +39,35 @@
         "https://*.habblet.city/*"
       ],
       "js": [
+        "anti-flood-config.js",
+        "anti-flood-bridge.js"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN",
+      "all_frames": true
+    },
+    {
+      "matches": [
+        "https://www.habblet.city/*",
+        "https://*.habblet.city/*"
+      ],
+      "js": [
+        "anti-flood-config.js",
+        "anti-flood.js"
+      ],
+      "css": [
+        "anti-flood.css"
+      ],
+      "run_at": "document_idle",
+      "world": "ISOLATED",
+      "all_frames": true
+    },
+    {
+      "matches": [
+        "https://www.habblet.city/*",
+        "https://*.habblet.city/*"
+      ],
+      "js": [
         "command-suggestions.js"
       ],
       "css": [

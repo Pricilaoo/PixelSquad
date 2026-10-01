@@ -75,6 +75,10 @@ async function prepare(frame) {
     await input.dispatchEvent('keydown', {key: 'Tab', isComposing: true}); assert.equal(await input.inputValue(), ':kick');
     await input.dispatchEvent('compositionend'); await popup.waitFor();
     await page.setViewportSize({width: 360, height: 600});
+    await page.waitForFunction(() => {
+      const rect = document.querySelector('#pixelsquad-command-suggestions')?.getBoundingClientRect();
+      return rect && rect.left >= 0 && rect.right <= innerWidth;
+    });
     const narrow = await popup.boundingBox(); assert(narrow.x >= 0 && narrow.x + narrow.width <= 360);
     await input.press('Escape');
     const frameReady = page.waitForEvent('framenavigated', {predicate: frame => frame.url().includes('/game-fixture')});

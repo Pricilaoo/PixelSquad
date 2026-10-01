@@ -1,0 +1,7 @@
+#pixelsquad #ps-main .ps-antiflood-section h3 { margin: 0 0 10px; }
+#pixelsquad #ps-main .ps-antiflood-section .ps-antiflood-nested { margin-left: 12px; border-style: dashed; font-style: italic; }
+#pixelsquad #ps-main .ps-antiflood-section label[aria-disabled="true"] { opacity: .5; cursor: default; }
+#pixelsquad #ps-main .ps-antiflood-rule { margin-top: 12px; }
+#pixelsquad #ps-main .ps-antiflood-rule > input { margin-top: 7px; }
+#pixelsquad #ps-main .ps-antiflood-section input:disabled { opacity: .5; cursor: not-allowed; }
+.bubble-container.ps-antiflood-hidden { display: none !important; }

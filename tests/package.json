@@ -1,7 +1,7 @@
 {
   "private": true,
   "scripts": {
-    "test": "node loading.cjs && node ui.cjs && node performance.cjs && node avatar.cjs && node launcher.cjs && node rgb.cjs && node catalog.cjs",
+    "test": "node loading.cjs && node ui.cjs && node performance.cjs && node avatar.cjs && node launcher.cjs && node rgb.cjs && node catalog.cjs && node anti-flood.cjs",
     "test:browser": "node navigation-browser.cjs && node commands-browser.cjs"
   },
   "devDependencies": {

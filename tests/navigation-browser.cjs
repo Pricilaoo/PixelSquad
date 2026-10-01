@@ -61,6 +61,20 @@ async function validateControls(page) {
   assert(await rgb.isChecked());
   assert.equal(await page.evaluate(() => JSON.parse(localStorage.pixelsquad_rgb).text), true);
   await rgb.uncheck();
+  await tab('antiflood');
+  assert.equal(await page.locator('#ps-main [data-antiflood]').count(), 15);
+  assert(await page.locator('[data-antiflood="chatOnlyActivity"]').isDisabled());
+  await page.locator('[data-antiflood="untilActive"]').check();
+  assert.equal(await page.locator('[data-antiflood="chatOnlyActivity"]').isDisabled(), false);
+  await page.locator('[data-antiflood="chatOnlyActivity"]').check();
+  await page.locator('[data-antiflood="nameEnabled"]').check();
+  await page.locator('[data-antiflood="namePattern"]').fill('Bot de anúncio');
+  assert.equal(await page.evaluate(() => JSON.parse(localStorage.pixelsquad_antiflood).namePattern), 'Bot de anúncio');
+  assert.equal(await page.evaluate(() => JSON.parse(localStorage.pixelsquad_antiflood).chatOnlyActivity), true);
+  await screenshot('antiflood-default');
+  await page.getByRole('button', {name: 'Restaurar Anti-flood padrão'}).click();
+  assert.equal(await page.locator('[data-antiflood="untilActive"]').isChecked(), false);
+  assert(await page.locator('[data-antiflood="namePattern"]').isDisabled());
   await tab('translate');
   const incoming = page.locator('#tr-in'); await incoming.locator('..').click({position: {x: 12, y: 12}});
   assert.equal(await incoming.isChecked(), false);
@@ -80,14 +94,14 @@ async function validateControls(page) {
     await page.locator('#pixelsquad .box').evaluate((box, size) => {
       box.classList.add('ps-user-size'); box.style.setProperty('--ps-user-width', size + 'px'); box.style.setProperty('--ps-user-height', '640px');
     }, width);
-    for (const name of ['settings', 'translate', 'build', 'wired', 'enables', 'tools', 'visuals']) await tab(name);
+    for (const name of ['settings', 'antiflood', 'translate', 'build', 'wired', 'enables', 'tools', 'visuals']) await tab(name);
     await tab('settings'); await screenshot('settings-' + width);
   }
   await page.locator('[data-appearance="scale"]').evaluate(input => {
     input.value = '140'; input.dispatchEvent(new Event('input', {bubbles: true}));
   });
   await page.setViewportSize({width: 375, height: 800});
-  for (const name of ['settings', 'translate', 'build', 'wired', 'enables']) await tab(name);
+  for (const name of ['settings', 'antiflood', 'translate', 'build', 'wired', 'enables']) await tab(name);
   await tab('settings'); await screenshot('settings-small-large-text');
   await page.locator('[data-appearance="scale"]').evaluate(input => {
     input.value = '100'; input.dispatchEvent(new Event('input', {bubbles: true}));
@@ -120,7 +134,7 @@ async function validateControls(page) {
     const {frameTree} = await cdp.send('Page.getFrameTree');
     const {executionContextId} = await cdp.send('Page.createIsolatedWorld', {frameId: frameTree.frame.id, worldName: 'PixelSquadFixture'});
     const result = await cdp.send('Runtime.evaluate', {contextId: executionContextId, expression:
-      'window.chrome={runtime:{getURL:()=>"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jD/8AAAAASUVORK5CYII=",onMessage:{addListener(){}}},storage:{local:{get:async()=>({}),set:async()=>{}},onChanged:{addListener(){}}}};\n' + ['locales.js','rgb.js','translation.js','effects-catalog.js','handitems-catalog.js','content.js'].map(source).join('\n')});
+      'window.chrome={runtime:{getURL:()=>"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jD/8AAAAASUVORK5CYII=",onMessage:{addListener(){}}},storage:{local:{get:async()=>({}),set:async()=>{}},onChanged:{addListener(){}}}};\n' + ['locales.js','rgb.js','anti-flood-config.js','anti-flood.js','translation.js','effects-catalog.js','handitems-catalog.js','content.js'].map(source).join('\n')});
     assert(!result.exceptionDetails, JSON.stringify(result.exceptionDetails));
     const field = page.locator('.chat-input');
     await field.fill(':pixel'); await field.press('Enter');
