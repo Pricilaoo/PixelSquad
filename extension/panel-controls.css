@@ -1,0 +1,155 @@
+/* PixelSquad controls follow the player's existing colors and text scale. */
+#pixelsquad {
+  --ps-control-border: color-mix(in srgb, var(--ps-text) 18%, var(--ps-panel));
+  --ps-control-radius: min(10px, var(--ps-radius));
+}
+#pixelsquad #ps-main button:where(:not(.ps-item-star):not([data-go])) {
+  box-sizing: border-box;
+  min-height: 40px;
+  max-width: 100%;
+  min-width: 0;
+  margin: 0 !important;
+  padding: 10px 14px !important;
+  border: 1px solid var(--ps-control-border) !important;
+  border-radius: var(--ps-control-radius) !important;
+  background: color-mix(in srgb, var(--ps-panel) 92%, var(--ps-text)) !important;
+  color: var(--ps-text) !important;
+  font: 600 calc(12px * var(--ps-scale))/1.4 Arial, sans-serif !important;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+  transition: background-color .14s ease, border-color .14s ease, box-shadow .14s ease;
+}
+#pixelsquad #ps-main button:where(:not(.ps-item-star):not([data-go])):hover:enabled {
+  background: color-mix(in srgb, var(--ps-accent) 14%, var(--ps-panel)) !important;
+  border-color: color-mix(in srgb, var(--ps-accent) 65%, var(--ps-panel)) !important;
+}
+#pixelsquad #ps-main button:where(:not(.ps-item-star):not([data-go])):active:enabled {
+  background: color-mix(in srgb, var(--ps-accent) 24%, var(--ps-panel)) !important;
+}
+#pixelsquad #ps-main button:disabled { opacity: .45; cursor: not-allowed; }
+#pixelsquad #ps-main :is(button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--ps-accent) !important;
+  outline-offset: 3px !important;
+}
+#pixelsquad #ps-main :is(.tools, .avatar-grid, .grid) {
+  grid-template-columns: repeat(auto-fit, minmax(min(132px, 100%), 1fr)) !important;
+  gap: 10px !important;
+}
+#pixelsquad #ps-main .filters { gap: 8px; margin: 12px 0; }
+#pixelsquad #ps-main .filters button { flex: 1 1 92px; }
+#pixelsquad #ps-main :is(.filters button[aria-pressed="true"], #ps-chat-send, #tr-test, [data-v="random"], [data-item-action]) {
+  border-color: color-mix(in srgb, var(--ps-accent) 80%, var(--ps-panel)) !important;
+  background: color-mix(in srgb, var(--ps-accent) 20%, var(--ps-panel)) !important;
+}
+#pixelsquad #ps-main .enable-info { flex: 1; gap: 6px; }
+#pixelsquad #ps-main .enable-info button { margin-top: auto !important; }
+#pixelsquad #ps-main .enable-actions { flex-wrap: wrap; gap: 10px; }
+#pixelsquad #ps-main .enable-actions .muted { margin: 0; }
+#pixelsquad #ps-main :is(.card, .grid article) button { width: 100%; margin-top: 10px !important; }
+#pixelsquad #ps-main .panel-position-settings > button { width: 100%; margin-top: 12px !important; }
+#pixelsquad #ps-main > button { margin-top: 12px !important; }
+#pixelsquad #ps-main .row { flex-wrap: wrap; gap: 10px; }
+#pixelsquad #ps-main .row h2 { flex: 1 1 180px; }
+#pixelsquad #ps-main .row input { flex: 1 1 170px; min-width: min(170px, 100%); margin-top: 0 !important; }
+
+#pixelsquad #ps-main :is(input:not([type="checkbox"]):not([type="range"]):not([type="color"]), select, textarea) {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  padding: 10px 12px;
+  border: 1px solid var(--ps-control-border) !important;
+  border-radius: var(--ps-control-radius) !important;
+  background-color: color-mix(in srgb, var(--ps-bg) 80%, var(--ps-panel)) !important;
+  color: var(--ps-text) !important;
+  line-height: 1.4;
+  transition: border-color .14s ease, box-shadow .14s ease;
+}
+#pixelsquad #ps-main select {
+  appearance: none;
+  padding-right: 36px;
+  cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, var(--ps-text) 50%), linear-gradient(135deg, var(--ps-text) 50%, transparent 50%);
+  background-size: 6px 6px;
+  background-position: right 18px center, right 12px center;
+  background-repeat: no-repeat;
+}
+#pixelsquad #ps-main option { background: var(--ps-panel); color: var(--ps-text); }
+#pixelsquad #ps-main :is(input, select, textarea):hover:enabled { border-color: color-mix(in srgb, var(--ps-accent) 45%, var(--ps-panel)) !important; }
+#pixelsquad #ps-main input[type="checkbox"] {
+  appearance: auto;
+  box-sizing: border-box;
+  width: 20px !important;
+  min-width: 20px !important;
+  max-width: 20px !important;
+  height: 20px;
+  margin: 0 !important;
+  padding: 0 !important;
+  flex: 0 0 20px;
+  order: 1;
+  accent-color: var(--ps-accent);
+  cursor: pointer;
+}
+#pixelsquad #ps-main label { box-sizing: border-box; min-width: 0; line-height: 1.5; }
+#pixelsquad #ps-main :is(h2, h3, label, strong, .muted, .status) { overflow-wrap: anywhere; }
+#pixelsquad #ps-main label:has(> input[type="checkbox"]) {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 48px;
+  padding: 11px 12px;
+  border: 1px solid var(--ps-control-border);
+  border-radius: var(--ps-control-radius);
+  background: var(--ps-panel) !important;
+  color: var(--ps-text);
+  cursor: pointer;
+  transition: border-color .14s ease, background-color .14s ease;
+}
+#pixelsquad #ps-main label:has(> input[type="checkbox"]:checked) {
+  border-color: color-mix(in srgb, var(--ps-accent) 65%, var(--ps-panel));
+  background: color-mix(in srgb, var(--ps-accent) 8%, var(--ps-panel)) !important;
+}
+#pixelsquad #ps-main label:has(> input[type="checkbox"]):hover { border-color: var(--ps-accent); }
+#pixelsquad #ps-main .ps-custom-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(130px, 100%), 1fr));
+  align-items: stretch;
+  gap: 12px;
+}
+#pixelsquad #ps-main .ps-custom-grid label { margin: 0; min-width: 0; }
+#pixelsquad #ps-main .ps-custom-grid label:not(.ps-toggle) {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--ps-control-border);
+  border-radius: var(--ps-control-radius);
+  background: var(--ps-panel);
+}
+#pixelsquad #ps-main .ps-custom-grid label > span { min-width: 0; overflow-wrap: anywhere; }
+#pixelsquad #ps-main .ps-custom-grid :is(input, output) { margin: 0; }
+#pixelsquad #ps-main input[type="color"] { width: 100%; height: 40px; padding: 4px; border-color: var(--ps-control-border); cursor: pointer; }
+#pixelsquad #ps-main input[type="range"] { width: 100%; min-width: 0; min-height: 22px; padding: 0; border: 0; accent-color: var(--ps-accent); cursor: pointer; }
+#pixelsquad.ps-compact #ps-main button:where(:not(.ps-item-star):not([data-go])) { min-height: 34px; padding: 7px 10px !important; }
+
+#pixelsquad.ps-sidebar .box { grid-template-columns: clamp(104px, 30%, 144px) minmax(0, 1fr) !important; }
+#pixelsquad header strong { overflow-wrap: anywhere; }
+#pixelsquad #ps-nav button {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+  min-height: 38px;
+  margin: 0;
+  line-height: 1.4;
+  white-space: normal !important;
+}
+#pixelsquad #ps-nav button:hover { transform: none; }
+#pixelsquad .ps-nav-icon { text-align: center; }
+#pixelsquad .ps-nav-label { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 600px) { #pixelsquad.ps-sidebar .box { grid-template-columns: clamp(104px, 30%, 128px) minmax(0, 1fr) !important; } }
+@media (prefers-reduced-motion: reduce) { #pixelsquad #ps-main :is(button, input, select, textarea, label) { transition: none; } }

@@ -32,5 +32,12 @@ jobs:
         run: npm install --prefix tests --ignore-scripts --no-audit --no-fund
       - name: Validate UI, catalogs and existing features
         run: npm test --prefix tests
-      - name: Validate chat and creator across browser frames
+      - name: Validate controls, chat and creator in Chrome
         run: npm run test:browser --prefix tests
+      - name: Save panel previews
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: PixelSquad-controls-preview
+          path: /tmp/pixelsquad-controls/
+          if-no-files-found: ignore

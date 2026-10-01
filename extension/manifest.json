@@ -79,6 +79,7 @@
       ],
       "css": [
         "content.css",
+        "panel-controls.css",
         "avatar-generator.css"
       ],
       "run_at": "document_idle",
