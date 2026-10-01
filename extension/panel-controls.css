@@ -135,7 +135,7 @@
 #pixelsquad #ps-main input[type="range"] { width: 100%; min-width: 0; min-height: 22px; padding: 0; border: 0; accent-color: var(--ps-accent); cursor: pointer; }
 #pixelsquad.ps-compact #ps-main button:where(:not(.ps-item-star):not([data-go])) { min-height: 34px; padding: 7px 10px !important; }
 
-#pixelsquad.ps-sidebar .box { grid-template-columns: clamp(104px, 30%, 144px) minmax(0, 1fr) !important; }
+#pixelsquad.ps-sidebar .box { grid-template-columns: clamp(128px, 30%, 144px) minmax(0, 1fr) !important; }
 #pixelsquad header strong { overflow-wrap: anywhere; }
 #pixelsquad #ps-nav button {
   box-sizing: border-box;
@@ -151,5 +151,5 @@
 #pixelsquad #ps-nav button:hover { transform: none; }
 #pixelsquad .ps-nav-icon { text-align: center; }
 #pixelsquad .ps-nav-label { min-width: 0; overflow-wrap: anywhere; }
-@media (max-width: 600px) { #pixelsquad.ps-sidebar .box { grid-template-columns: clamp(104px, 30%, 128px) minmax(0, 1fr) !important; } }
+@media (max-width: 600px) { #pixelsquad.ps-sidebar .box { grid-template-columns: 128px minmax(0, 1fr) !important; } }
 @media (prefers-reduced-motion: reduce) { #pixelsquad #ps-main :is(button, input, select, textarea, label) { transition: none; } }
