@@ -21,6 +21,8 @@ const profileHeader = bytes => new DataView(Uint8Array.from(bytes).buffer).getUi
 async function prepareGame(frame) {
   await frame.evaluate(socketFixture);
   await frame.addScriptTag({content: source('performance-bridge.js')});
+  await frame.addStyleTag({content: source('command-suggestions.css')});
+  await frame.addScriptTag({content: source('command-suggestions.js')});
   await frame.addScriptTag({content: source('pixel-shortcut.js')});
   await frame.evaluate(authenticate);
 }

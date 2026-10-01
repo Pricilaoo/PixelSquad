@@ -39,6 +39,21 @@
         "https://*.habblet.city/*"
       ],
       "js": [
+        "command-suggestions.js"
+      ],
+      "css": [
+        "command-suggestions.css"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN",
+      "all_frames": true
+    },
+    {
+      "matches": [
+        "https://www.habblet.city/*",
+        "https://*.habblet.city/*"
+      ],
+      "js": [
         "loading.js"
       ],
       "run_at": "document_start",

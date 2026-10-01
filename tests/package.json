@@ -2,10 +2,12 @@
   "private": true,
   "scripts": {
     "test": "node loading.cjs && node ui.cjs && node performance.cjs && node avatar.cjs && node launcher.cjs && node rgb.cjs && node catalog.cjs",
-    "test:browser": "node navigation-browser.cjs"
+    "test:browser": "node navigation-browser.cjs && node commands-browser.cjs"
   },
   "devDependencies": {
     "linkedom": "0.18.13",
-    "playwright-core": "1.55.1"
+    "playwright-core": "1.55.1",
+    "react": "18.2.0",
+    "react-dom": "18.2.0"
   }
 }
