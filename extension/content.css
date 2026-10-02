@@ -295,6 +295,7 @@
 
 #pixelsquad-launch{touch-action:none!important;user-select:none!important;-webkit-user-select:none!important}
 #pixelsquad-launch img{pointer-events:none!important;-webkit-user-drag:none!important}
+#pixelsquad-launch[hidden]{display:none!important}
 
 /* Compact app window: sidebar, separate content header and creator footer. */
 #pixelsquad .box {box-sizing:border-box!important;width:490px!important;max-width:calc(100vw - 24px)!important;height:min(640px,calc(100vh - 80px))!important;padding:0!important;overflow:hidden!important;left:calc(50vw - 245px)!important;border:1px solid color-mix(in srgb,var(--ps-accent) 25%,transparent)!important;border-radius:var(--ps-radius)!important}

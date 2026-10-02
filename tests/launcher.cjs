@@ -14,11 +14,16 @@ const ctx = vm.createContext({window, document: window.document, innerWidth:1000
 const run = file => vm.runInContext(fs.readFileSync(root + '/' + file, 'utf8'), ctx);
 run('launcher.js');
 const button = window.document.createElement('button');window.document.body.appendChild(button);
+let clicks=0;
 window.PixelSquadLauncher.movable(button);
+button.addEventListener('click',()=>clicks++);
+const click=detail=>{const e=new window.Event('click',{bubbles:true,cancelable:true});e.detail=detail;button.dispatchEvent(e);};
 const pointer = (type,x,y) => {const e = new window.Event(type,{bubbles:true,cancelable:true});Object.assign(e,{pointerId:1,button:0,clientX:x,clientY:y});button.dispatchEvent(e);};
 pointer('pointerdown',20,100);pointer('pointermove',22,101);pointer('pointerup',22,101);assert.equal(saved.size,0);
+click(1);assert.equal(clicks,1);
 pointer('pointerdown',20,100);pointer('pointermove',9999,9999);pointer('pointerup',9999,9999);
 assert.deepEqual(JSON.parse(saved.get('pixelsquad_launcher_position')),{x:936,y:636});
+click(1);assert.equal(clicks,1);click(0);assert.equal(clicks,2);
 const another = window.document.createElement('button');window.document.body.appendChild(another);window.PixelSquadLauncher.movable(another);assert.equal(another.style.left,'936px');
 run('pixel-shortcut.js');
 const field = window.document.querySelector('.nitro-chat-input input');

@@ -119,6 +119,7 @@ async function validateControls(page) {
     // Every URL is served from this fixture. No real hotel connection or credentials are used.
     await page.route('**/*', route => route.fulfill({contentType: 'text/html', body: '<html><body>' + markup + '</body></html>'}));
     await page.goto('https://www.habblet.city/pixelsquad-fixture');
+    await page.evaluate(() => {document.body.innerHTML = '<main><h1>Hotel</h1></main>';});
     const manifest = JSON.parse(source('manifest.json'));
     for (const entry of manifest.content_scripts.filter(entry => entry.world === 'ISOLATED')) {
       for (const css of entry.css || []) await page.addStyleTag({content: source(css)});
@@ -134,11 +135,24 @@ async function validateControls(page) {
     const {frameTree} = await cdp.send('Page.getFrameTree');
     const {executionContextId} = await cdp.send('Page.createIsolatedWorld', {frameId: frameTree.frame.id, worldName: 'PixelSquadFixture'});
     const result = await cdp.send('Runtime.evaluate', {contextId: executionContextId, expression:
-      'window.chrome={runtime:{getURL:()=>"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jD/8AAAAASUVORK5CYII=",onMessage:{addListener(){}}},storage:{local:{get:async()=>({}),set:async()=>{}},onChanged:{addListener(){}}}};\n' + ['locales.js','rgb.js','anti-flood-config.js','anti-flood.js','translation.js','effects-catalog.js','handitems-catalog.js','content.js'].map(source).join('\n')});
+      'window.chrome={runtime:{getURL:()=>"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jD/8AAAAASUVORK5CYII=",onMessage:{addListener(){}}},storage:{local:{get:async()=>({}),set:async()=>{}},onChanged:{addListener(){}}}};\n' + ['game-context.js','locales.js','rgb.js','anti-flood-config.js','anti-flood.js','translation.js','launcher.js','effects-catalog.js','handitems-catalog.js','content.js'].map(source).join('\n')});
     assert(!result.exceptionDetails, JSON.stringify(result.exceptionDetails));
+    const launch = page.locator('#pixelsquad-launch');
+    assert(await launch.isHidden()); await page.keyboard.press('Shift+B'); assert.equal(await page.locator('#pixelsquad').count(), 0);
+    await page.evaluate(html => {document.body.innerHTML = html;}, markup);
+    await launch.waitFor({state: 'visible'});
+    await launch.click(); await page.waitForSelector('#pixelsquad'); assert.equal(await launch.getAttribute('aria-expanded'), 'true');
+    const iconBox = await launch.boundingBox();
+    await page.mouse.move(iconBox.x + iconBox.width / 2, iconBox.y + iconBox.height / 2); await page.mouse.down();
+    await page.mouse.move(100, 200, {steps: 5}); await page.mouse.up();
+    assert.equal(await page.locator('#pixelsquad').count(), 1);
+    await launch.click(); assert.equal(await page.locator('#pixelsquad').count(), 0); assert.equal(await launch.getAttribute('aria-expanded'), 'false');
+    await launch.focus(); await launch.press('Space'); await page.waitForSelector('#pixelsquad');
+    await launch.press('Enter'); assert.equal(await page.locator('#pixelsquad').count(), 0);
     const field = page.locator('.chat-input');
     await field.fill(':pixel'); await field.press('Enter');
     await page.waitForSelector('#pixelsquad');
+    assert.equal(await launch.getAttribute('aria-label'), 'Fechar PixelSquad');
     assert.equal(await field.inputValue(), '');
     assert.deepEqual(await page.evaluate(() => window.nativeChats), []);
     assert.equal(await page.locator('#ps-creator').textContent(), 'Feito por Pricilao.');
@@ -178,6 +192,11 @@ async function validateControls(page) {
       const frame = document.createElement('iframe'); frame.src = 'https://game.habblet.city/game-fixture'; document.body.appendChild(frame);
     });
     const game = await frameReady; await game.waitForSelector('.chat-input'); await prepareGame(game);
+    const {frameTree: childTree} = await cdp.send('Page.getFrameTree');
+    const childId = childTree.childFrames.find(item => item.frame.url === game.url()).frame.id;
+    const {executionContextId: childContext} = await cdp.send('Page.createIsolatedWorld', {frameId: childId, worldName: 'PixelSquadFixture'});
+    const childResult = await cdp.send('Runtime.evaluate', {contextId: childContext, expression: source('game-context.js')});
+    assert(!childResult.exceptionDetails, JSON.stringify(childResult.exceptionDetails));
     await game.locator('.chat-input').fill(':pixel'); await game.locator('.chat-input').press('Enter');
     await page.waitForSelector('#pixelsquad');
     // The credit still reaches a game in another frame when the parent has no toolbar.
@@ -187,6 +206,14 @@ async function validateControls(page) {
     const frameProfiles = await game.evaluate(() => window.testPackets.filter(bytes => new DataView(Uint8Array.from(bytes).buffer).getUint16(4) === 2249));
     assert.equal(frameProfiles.length, 1);
     assert.equal(String.fromCharCode(...frameProfiles[0].slice(8)), 'Pricilao.');
+    assert(await launch.isVisible());
+    await page.evaluate(() => document.querySelector('iframe').remove());
+    await launch.waitFor({state: 'hidden'}); assert.equal(await page.locator('#pixelsquad').count(), 0);
+    await page.keyboard.press('Shift+B'); assert.equal(await page.locator('#pixelsquad').count(), 0);
+    await page.evaluate(() => document.body.insertAdjacentHTML('beforeend', '<div class="nitro-toolbar"></div>'));
+    await launch.waitFor({state: 'visible'}); assert.equal(await page.locator('#pixelsquad').count(), 0);
+    await launch.click(); assert.equal(await page.locator('#pixelsquad').count(), 1);
+    console.log('PASS: real icon mouse/keyboard toggle, drag without toggling, hidden outside the game, iframe-only game visibility, game exit and return');
     assert.deepEqual(errors, []);
     console.log('PASS: Chrome main/isolated worlds, native Nitro chat interception, real panel rendering, synchronous creator click, confirmed ID and game iframe fallback');
   } finally { await browser.close(); }

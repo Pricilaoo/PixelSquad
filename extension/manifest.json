@@ -39,6 +39,18 @@
         "https://*.habblet.city/*"
       ],
       "js": [
+        "game-context.js"
+      ],
+      "run_at": "document_start",
+      "world": "ISOLATED",
+      "all_frames": true
+    },
+    {
+      "matches": [
+        "https://www.habblet.city/*",
+        "https://*.habblet.city/*"
+      ],
+      "js": [
         "anti-flood-config.js",
         "anti-flood-bridge.js"
       ],

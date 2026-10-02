@@ -2,8 +2,9 @@ const {parseHTML}=require('linkedom');
 const vm=require('vm'),fs=require('fs'),assert=require('assert');
 const root=require('path').join(__dirname,'../extension')+require('path').sep;
 function fixture(initial={},body='',catalogStorage={}){
- const {window}=parseHTML('<html><head></head><body>'+body+'</body></html>');
- delete window.__PIXELSQUAD__;delete window.__PIXELSQUAD_MUSIC__;
+ const {window}=parseHTML('<html><head></head><body><div class="nitro-toolbar"></div>'+body+'</body></html>');
+ delete window.__PIXELSQUAD__;delete window.__PIXELSQUAD_MUSIC__;delete window.PixelSquadGame;
+ Object.defineProperty(window,'parent',{value:window,configurable:true});
  const store=new Map(Object.entries(initial)),timers=new Map(),intervals=new Map(),observers=[],resize=new Set();
  const storage={getItem:k=>store.get(k)||null,setItem:(k,v)=>store.set(k,String(v)),removeItem:k=>store.delete(k)};
  let id=0,openPanel;
@@ -17,12 +18,13 @@ function fixture(initial={},body='',catalogStorage={}){
  window.postMessage=()=>{};
  const sandbox={window,document:window.document,localStorage:storage,navigator:{mediaSession:{metadata:null}},
   chrome:{runtime:{getURL:p=>p,onMessage:{addListener:f=>openPanel=f}},storage:{local:{get:async()=>catalogStorage}}},
-  innerWidth:1000,innerHeight:700,Event:window.Event,CustomEvent:window.CustomEvent,
+  innerWidth:1000,innerHeight:700,Event:window.Event,CustomEvent:window.CustomEvent,URL,queueMicrotask,
   MutationObserver:class{constructor(f){this.f=f;observers.push(this)}observe(){}disconnect(){}},
   setTimeout(f,ms){timers.set(++id,{f,ms});return id},clearTimeout:i=>timers.delete(i),
   setInterval(f){intervals.set(++id,f);return id},clearInterval:i=>intervals.delete(i),console,prompt:()=>null};
  const ctx=vm.createContext(sandbox);
  const run=p=>vm.runInContext(fs.readFileSync(root+p,'utf8'),ctx,{filename:p});
+ run('game-context.js');
  const flush=()=>{for(const [i,t] of [...timers])if(t.ms===100){timers.delete(i);t.f()}};
  const pointer=(el,type,props)=>{const e=new window.Event(type,{bubbles:true});Object.assign(e,{pointerId:1,button:0,clientX:20,clientY:20},props);el.dispatchEvent(e)};
  return {window,document:window.document,store,run,resize,intervals,observers,pointer,sandbox,open:()=>openPanel({type:'openPanel'}),tick:()=>{for(const f of [...intervals.values()])f()},flush,
@@ -46,6 +48,25 @@ const radius=f.document.querySelector('[data-appearance=radius]');radius.value='
 f.open();assert.equal(f.document.querySelector('#pixelsquad').style.getPropertyValue('--ps-radius'),'0px');assert.equal(f.resize.size,2);
 f.document.querySelector('#ps-close').click();assert.equal(f.resize.size,0);
 console.log('PASS: corrupt preferences, retired tab migration, tab rendering, nine appearance controls, persistence and drag-listener cleanup');
+
+const toggleFixture=fixture();toggleFixture.run('locales.js');toggleFixture.run('content.js');
+const launch=toggleFixture.document.querySelector('#pixelsquad-launch');
+assert.equal(launch.hidden,false);assert.equal(launch.getAttribute('aria-expanded'),'false');
+launch.click();assert.equal(toggleFixture.document.querySelectorAll('#pixelsquad').length,1);assert.equal(launch.getAttribute('aria-expanded'),'true');
+toggleFixture.document.querySelector('[data-tab=settings]').click();
+toggleFixture.document.querySelector('[data-appearance=accent]').value='#654321';
+toggleFixture.document.querySelector('[data-appearance=accent]').dispatchEvent(new toggleFixture.window.Event('input'));
+launch.click();assert(!toggleFixture.document.querySelector('#pixelsquad'));assert.equal(toggleFixture.resize.size,0);assert.equal(launch.getAttribute('aria-label'),'Abrir PixelSquad');
+launch.click();assert(toggleFixture.document.querySelector('[data-tab=settings]').classList.contains('active'));assert.equal(toggleFixture.document.querySelector('#pixelsquad').style.getPropertyValue('--ps-accent'),'#654321');
+toggleFixture.open();assert.equal(toggleFixture.document.querySelectorAll('#pixelsquad').length,1);assert.equal(toggleFixture.resize.size,2);
+toggleFixture.document.querySelector('#ps-close').click();assert.equal(launch.getAttribute('aria-expanded'),'false');
+launch.click();toggleFixture.document.querySelector('.nitro-toolbar').remove();toggleFixture.window.PixelSquadGame.refresh();
+assert(launch.hidden);assert(!toggleFixture.document.querySelector('#pixelsquad'));assert.equal(toggleFixture.resize.size,0);
+toggleFixture.open();assert(!toggleFixture.document.querySelector('#pixelsquad'));
+toggleFixture.document.body.insertAdjacentHTML('beforeend','<div class="nitro-toolbar"></div>');toggleFixture.window.PixelSquadGame.refresh();
+assert.equal(launch.hidden,false);assert(!toggleFixture.document.querySelector('#pixelsquad'));
+launch.click();assert(toggleFixture.document.querySelector('#pixelsquad'));
+console.log('PASS: icon toggle, close-button state, saved tab/appearance, repeated native open, resize cleanup, game exit and return');
 
 const creatorFixture=fixture();creatorFixture.run('locales.js');creatorFixture.run('content.js');creatorFixture.open();
 const creatorButton=creatorFixture.document.querySelector('#ps-creator');

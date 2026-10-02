@@ -17,7 +17,7 @@
         try {localStorage.setItem(key, JSON.stringify({x, y}));} catch {}
       };
       if (Number.isFinite(saved?.x) && Number.isFinite(saved?.y)) position(saved.x, saved.y);
-      button.title = 'PixelSquad • clique para abrir ou arraste para mover • comando :pixel';
+      button.title = 'PixelSquad • clique para abrir ou fechar • arraste para mover • comando :pixel';
       button.addEventListener('pointerdown', event => {
         if (event.button !== 0) return;
         suppressClick = false;
