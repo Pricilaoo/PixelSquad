@@ -32,7 +32,7 @@
       if(message.event==='origin' && message.requestId===selectionId) {
         origin=message.data;selectionId=null;root.classList.remove('ps-builder-minimized');get('minimize').setAttribute('aria-expanded','true');get('origin').textContent=`Piso (${origin.x}, ${origin.y}) · quarto ${origin.roomId}`;status('Piso selecionado. Confira a prévia e os materiais para construir.');
       }
-      if(message.event==='selection-cancelled' && message.requestId===selectionId) {selectionId=null;root.classList.remove('ps-builder-minimized');status(message.data.message);}
+      if(message.event==='selection-cancelled' && message.requestId===selectionId) {selectionId=null;root.classList.remove('ps-builder-minimized');get('minimize').setAttribute('aria-expanded','true');status(message.data.message);}
       if(message.event==='progress' && message.requestId===operationId) {
         const data=message.data;
         get('progress').hidden=false;get('progress-bar').max=data.total || 1;get('progress-bar').value=data.placed;
@@ -44,7 +44,7 @@
   function status(message,error=false) {if(!root)return;get('status').textContent=message;get('status').classList.toggle('ps-builder-error',error);}
   function setBusy(value) {
     busy=value;if(!root)return;
-    for(const input of root.querySelectorAll('input,select,[data-project],[data-id=suggest],[data-id=refresh],[data-id=rotate],[data-id=select],[data-id=buy],[data-id=build]')) input.disabled=value;
+    for(const input of root.querySelectorAll('input,select,[data-project],[data-id=suggest],[data-id=refresh],[data-id=rotate],[data-id=select],[data-id=buy],[data-id=build]')) input.disabled=value || input.dataset.unavailable==='true';
     get('stop').hidden=!value;
   }
   function planInput() {return {project:current,width:Number(get('width').value),length:Number(get('length').value),height:Number(get('height').value),rotation};}
@@ -60,6 +60,7 @@
       get('preview').innerHTML=`<svg role="img" aria-label="Prévia de ${escape(plan.name)} com ${plan.cells.length} blocos" viewBox="${minX} ${minY} ${maxX-minX} ${maxY-minY}">${cubes}</svg>`;
       get('size').textContent=`${plan.width} × ${plan.length} pisos · ${plan.height} ${plan.height===1?'camada':'camadas'} · ${plan.cells.length} blocos`;
       get('project-name').textContent=plan.name;
+      status('Confira a prévia e clique em Atualizar materiais antes de construir.');
       const roles=new Set(plan.cells.map(cell=>cell.role));for(const role of ['base','body','finish']) get(role).closest('label').hidden=!roles.has(role);
     } catch(error) {get('preview').innerHTML='';get('size').textContent='Ajuste as medidas do projeto.';status(error.message,true);}
   }
@@ -96,7 +97,7 @@
       if(origin?.roomId!==snapshot.roomId) {origin=null;get('origin').textContent='Nenhum piso selecionado';}
       populate();
       const value=await rpc('quote',{plan:planInput(),materials:materials()});if(!root||revision!==refreshRevision)return;quote=value;
-      get('materials-table').innerHTML=`<table><thead><tr><th>Mobi do catálogo</th><th>Projeto</th><th>Tenho</th><th>Faltam</th><th>Comprar</th><th>Custo</th></tr></thead><tbody>${quote.rows.map(row=>`<tr><td><strong>${escape(row.name)}</strong><small>#${row.id}${row.offer?` · ${row.offer.productCount} por pacote`:''}</small>${row.purchaseError?`<small class="ps-builder-unavailable">${escape(row.purchaseError)}</small>`:''}</td><td>${row.quantity}</td><td>${row.available}</td><td>${row.missing}</td><td><input type="number" min="0" max="4096" step="1" data-buy-id="${row.id}" value="${row.missing}" aria-label="Quantidade de ${escape(row.name)} para comprar" ${row.offer?'':'disabled'}></td><td data-price-id="${row.id}"></td></tr>`).join('')}</tbody></table>`;
+      get('materials-table').innerHTML=`<table><thead><tr><th>Mobi do catálogo</th><th>Projeto</th><th>Tenho</th><th>Faltam</th><th>Comprar</th><th>Custo</th></tr></thead><tbody>${quote.rows.map(row=>`<tr><td><strong>${escape(row.name)}</strong><small>#${row.id}${row.offer?` · ${row.offer.productCount} por pacote`:''}</small>${row.purchaseError?`<small class="ps-builder-unavailable">${escape(row.purchaseError)}</small>`:''}</td><td>${row.quantity}</td><td>${row.available}</td><td>${row.missing}</td><td><input type="number" min="0" max="4096" step="1" data-buy-id="${row.id}" data-unavailable="${row.offer?'false':'true'}" value="${row.missing}" aria-label="Quantidade de ${escape(row.name)} para comprar" ${row.offer?'':'disabled'}></td><td data-price-id="${row.id}"></td></tr>`).join('')}</tbody></table>`;
       costs();status('Materiais conferidos. Selecione o piso para construir.');
     } catch(error) {if(root&&revision===refreshRevision)status(error.message,true);} finally {if(root&&revision===refreshRevision)setBusy(false);}
   }
@@ -138,7 +139,7 @@
   function resize(){if(!root)return;const rect=root.getBoundingClientRect();root.style.left=`${Math.max(0,Math.min(rect.left,innerWidth-rect.width))}px`;root.style.top=`${Math.max(0,Math.min(rect.top,innerHeight-48))}px`;}
   function open() {
     if(window.PixelSquadGame?.refresh()!==true)return;
-    if(root){root.classList.remove('ps-builder-minimized');return;}
+    if(root){root.classList.remove('ps-builder-minimized');get('minimize').setAttribute('aria-expanded','true');return;}
     root=document.createElement('section');root.id='pixelsquad-builder';root.setAttribute('role','dialog');root.setAttribute('aria-label','Construtor de projetos PixelSquad');
     root.innerHTML=`<header data-id="header"><div><small>PIXELSQUAD / CONSTRUÇÃO</small><strong>Construtor de projetos</strong></div><div><button data-id="minimize" aria-label="Minimizar ou expandir construtor" aria-expanded="true">−</button><button data-id="close" aria-label="Fechar construtor">×</button></div></header><div class="ps-builder-body"><p data-id="room" class="ps-builder-room">Conectando ao quarto…</p><div class="ps-builder-prompt"><label for="ps-builder-description">O que você quer construir?</label><div><input id="ps-builder-description" data-id="description" placeholder="Ex.: castelo 8x8 com altura 4" maxlength="300"><button data-id="suggest">Buscar projetos</button></div><small data-id="suggestion"></small></div><div data-id="projects" class="ps-builder-projects"></div><div class="ps-builder-workspace"><div class="ps-builder-preview"><div class="ps-builder-preview-title"><strong data-id="project-name"></strong><button data-id="rotate" title="Girar projeto 90 graus">↻ Girar</button></div><div data-id="preview"></div><strong data-id="size"></strong><small>Prévia em blocos. A altura final depende dos mobis escolhidos.</small></div><div class="ps-builder-options"><div class="ps-builder-dimensions"><label>Largura<input data-id="width" type="number" min="1" max="16" value="5"></label><label>Comprimento<input data-id="length" type="number" min="1" max="16" value="5"></label><label>Altura<input data-id="height" type="number" min="1" max="8" value="1"></label></div><label>Buscar mobis do catálogo<input data-id="material-search" placeholder="Nome do bloco ou número do mobi"></label><label>Base<select data-id="base"><option value="0">Carregando catálogo…</option></select></label><label>Estrutura<select data-id="body"><option value="0">Carregando catálogo…</option></select></label><label>Acabamento<select data-id="finish"><option value="0">Carregando catálogo…</option></select></label><small>Use mobis de 1 × 1 que permitam empilhamento.</small></div></div><div class="ps-builder-materials"><div><h3>Materiais e compra</h3><button data-id="refresh">Atualizar materiais</button></div><div data-id="materials-table" class="ps-builder-table"></div><p data-id="cost"></p><label class="ps-builder-checkbox"><input type="checkbox" data-id="auto-buy">Comprar automaticamente os itens que faltam antes de construir</label><button data-id="buy">Comprar quantidades selecionadas</button></div><div class="ps-builder-location"><div><strong>Onde construir</strong><small data-id="origin">Nenhum piso selecionado</small></div><button data-id="select">Selecionar piso no quarto</button></div><div data-id="progress" hidden><progress data-id="progress-bar" max="1" value="0"></progress><small data-id="progress-text"></small></div><p data-id="status" role="status" aria-live="polite"></p><div class="ps-builder-actions"><button data-id="stop" hidden>Parar</button><button data-id="build" class="ps-builder-primary">Construir projeto</button></div><footer>Feito por Pricilao. · PixelSquad</footer></div>`;
     document.body.append(root);cards();preview();movable();

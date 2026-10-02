@@ -119,6 +119,7 @@
   }
   async function snapshot() {
     const room=ready(); await synchronize();
+    ready(room.roomId);
     return {roomId:room.roomId, rights:!room.isSpectator && room.controllerLevel >= 1, materials:metadata(), inventoryReady};
   }
   async function quote(data) {
@@ -192,19 +193,22 @@
     return {selecting:true,roomId:room.roomId};
   }
   async function purchases(run, quantities) {
-    run.phase='buy'; progress(run);
-    for(const row of run.quote.rows) {
+    const shopping=run.quote.rows.map(row=>{
       check(run); const shortage=Math.max(0,row.quantity-stock(row.id).length);
       const desired=quantities?.[row.id] === undefined ? shortage : Number(quantities[row.id]);
       if(!quantities && shortage>row.missing) throw Error('A quantidade disponível no inventário mudou. Atualize os materiais antes da compra automática.');
       if(!Number.isSafeInteger(desired)||desired<0||desired>4096) throw Error('A quantidade de compra precisa estar entre 0 e 4096 itens.');
-      if(!desired) continue;
+      if(!desired)return null;
       const offer=row.offer;
       if(!offer) throw Error(`${row.name}: não há oferta compatível no catálogo.`);
       if(offers.get(offer.offerId)!==offer) throw Error('A oferta mudou. Confira os preços antes de comprar.');
-      let packs=Math.ceil(desired/offer.productCount);
+      return {row,offer,packs:Math.ceil(desired/offer.productCount)};
+    }).filter(Boolean);
+    run.phase='buy'; progress(run);
+    for(const entry of shopping) {
+      const {row,offer}=entry;let packs=entry.packs;
       while(packs>0) {
-        check(run); const amount=offer.bulk?Math.min(100,packs):1, before=stock(row.id).length, expected=amount*offer.productCount;
+        check(run);if(offers.get(offer.offerId)!==offer) throw Error('A oferta mudou. Confira os preços antes de comprar.');const amount=offer.bulk?Math.min(100,packs):1, before=stock(row.id).length, expected=amount*offer.productCount;
         run.purchase={offerId:offer.offerId,confirmed:false};
         send(3492,[offer.pageId,offer.offerId,offer.extra,amount],[offer.pageId,offer.offerId,offer.extra,amount]);
         await until(()=>run.purchase.confirmed,12000,run,'A compra não foi confirmada. Nenhuma nova tentativa foi enviada; confira o inventário antes de tentar novamente.');

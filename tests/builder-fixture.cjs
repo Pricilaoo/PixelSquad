@@ -12,7 +12,7 @@ window.createNativeBuilderFixture = function(options={}) {
   const registeredEvents=new Map(), eventRegistry=new Map();
   for(const header of [1032,804,869,1404,3770,1866,994,104,159,3151,1534,2491]) {class NativeMessageEvent{constructor(callback){this.callback=callback;this.parserClass=class {};}}eventRegistry.set(NativeMessageEvent,header);}
   const emit=(header,parser)=>{if(!registeredEvents.get(header)?.size)return;for(const callback of subscribers)callback(header,parser);};
-  const index=()=>emit(1032,{catalogType:'NORMAL',root:{visible:true,pageId:8,offerIds:[501,502],children:[]}});
+  const index=()=>emit(1032,{catalogType:'NORMAL',root:{visible:true,pageId:8,offerIds:[501,502].filter(id=>id!==(options.noOffer===2?502:-1)),children:[]}});
   const inventory=()=>{
     const values=[...items.values()],middle=Math.ceil(values.length/2);
     emit(994,{totalFragments:2,fragmentNumber:0,fragment:new Map(values.slice(0,middle).map(item=>[item.itemId,item]))});

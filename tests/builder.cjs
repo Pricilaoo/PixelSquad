@@ -18,7 +18,7 @@ function setup(options={}) {
 }
 (async()=>{
   const t=setup({stock:1});
-  assert.equal(t.projects.projects.length,8);assert.equal(t.projects.suggest('CASTELO 8x8')[0].id,'castle');assert.equal(t.projects.suggest('nave espacial').length,0);
+  assert.equal(t.projects.projects.length,8);assert.equal(t.projects.suggest('CASTELO 8x8')[0].id,'castle');assert.equal(t.projects.suggest('castelo com base 8x8')[0].id,'castle');assert.equal(t.projects.suggest('nave espacial').length,0);
   assert.deepEqual(JSON.parse(JSON.stringify(t.projects.dimensions('castelo 8 por 9 com altura 4',t.projects.projects[5]))),{width:8,length:9,height:4});
   for(const project of t.projects.projects){const plan=t.projects.create({project:project.id});for(const cell of plan.cells)if(cell.z>0)assert(plan.cells.some(b=>b.x===cell.x&&b.y===cell.y&&b.z===cell.z-1),'Every block has support');}
   assert.throws(()=>t.projects.create({project:'wall',width:17}),/entre 1 e 16/);
@@ -44,6 +44,7 @@ function setup(options={}) {
   const escaping=setup();await escaping.rpc('select');const ev=new escaping.window.Event('keydown');Object.assign(ev,{key:'Escape'});escaping.window.dispatchEvent(ev);assert(!Object.hasOwn(escaping.fixture.handler,'handleRoomObjectEvent'));escaping.close();
   const partial=setup({partialInventory:true});assert.match((await partial.rpc('snapshot')).error,/inventário não respondeu/);assert(!partial.fixture.messages.some(m=>m.header===3492));partial.close();
   const packs=setup({stock:0,packSize:3,bulk:false});const qp=await packs.quote();const boughtPacks=await packs.rpc('buy',{quoteId:qp.data.id});assert.equal(boughtPacks.data.bought,6);assert.equal(packs.fixture.messages.filter(m=>m.header===3492).length,2);assert(packs.fixture.messages.filter(m=>m.header===3492).every(m=>m.args[3]===1));packs.close();assert([...packs.fixture.registeredEvents.values()].every(list=>list.size===0));
+  const unavailable=setup({stock:0,noOffer:2});const qu=await unavailable.quote(1,1,3,{base:1,body:2,finish:1});assert(qu.ok);assert.match((await unavailable.rpc('build',{quoteId:qu.data.id,origin:{roomId:42,x:5,y:5},autoBuy:true})).error,/não há oferta/);assert.equal(unavailable.fixture.messages.filter(m=>m.header===3492).length,0);unavailable.close();
   const changedStock=setup({stock:1});const qstock=await changedStock.quote();const item=[...changedStock.fixture.items.keys()][0];changedStock.fixture.items.delete(item);changedStock.fixture.emit(159,{itemId:item});assert.match((await changedStock.rpc('build',{quoteId:qstock.data.id,origin:{roomId:42,x:5,y:5},autoBuy:true})).error,/inventário mudou/);assert.equal(changedStock.fixture.messages.filter(m=>m.header===3492).length,0);changedStock.close();
   const incompatible=setup();incompatible.fixture.registry.delete([...incompatible.fixture.registry].find(([,id])=>id===3150)[0]);assert.match((await incompatible.rpc('snapshot')).error,/não disponibiliza/);incompatible.close();
   const manifest=JSON.parse(source('manifest.json')),main=manifest.content_scripts.find(s=>s.js?.includes('builder-bridge.js')),ui=manifest.content_scripts.find(s=>s.js?.includes('builder-panel.js'));
