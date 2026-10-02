@@ -1,0 +1,52 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
+const {parseHTML}=require('linkedom');
+const source=file=>fs.readFileSync(path.join(__dirname,'../extension',file),'utf8');
+function setup(options={}) {
+  const {window}=parseHTML('<html><body></body></html>');for(const name of ['__PIXELSQUAD_BUILDER_BRIDGE__','PixelSquadBuilderProjects','PixelSquadNativeClient'])delete window[name];
+  Object.defineProperty(window,'top',{value:window,configurable:true});const replies=[],events=[];let tick=0,id=0;
+  class Clock extends Date{static now(){return ++tick*100;}}
+  window.postMessage=data=>{if(data.type==='PS_BUILDER_REPLY')replies.push(data);else events.push(data);};
+  const context=vm.createContext({window,Date:Clock,setTimeout:(fn,ms)=>setTimeout(fn,ms===450?1:ms>=1000?50:1),clearTimeout});
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'builder-fixture.cjs'),'utf8'),context);const fixture=window.createNativeBuilderFixture(options);
+  vm.runInContext(source('builder-projects.js'),context);vm.runInContext(source('builder-bridge.js'),context);
+  const dispatch=(action,data={},requestId=`test-${++id}`)=>{const event=new window.Event('message');Object.assign(event,{source:window,origin:'https://www.habblet.city',data:{source:'pixelsquad',type:'PS_BUILDER_REQUEST',requestId,action,data}});window.dispatchEvent(event);return requestId;};
+  const result=async requestId=>{for(let i=0;i<500;i++){const reply=replies.find(r=>r.requestId===requestId);if(reply)return reply;await new Promise(resolve=>setTimeout(resolve,1));}throw Error(`No response: ${requestId}`);};
+  const rpc=(action,data)=>result(dispatch(action,data));
+  const quote=(width=2,length=2,height=1,materials={base:1,body:1,finish:1})=>rpc('quote',{plan:{project:'platform',width,length,height,rotation:0},materials});
+  const close=()=>window.dispatchEvent(new window.Event('pagehide'));
+  return {window,fixture,replies,events,dispatch,result,rpc,quote,close,projects:window.PixelSquadBuilderProjects};
+}
+(async()=>{
+  const t=setup({stock:1});
+  assert.equal(t.projects.projects.length,8);assert.equal(t.projects.suggest('CASTELO 8x8')[0].id,'castle');assert.equal(t.projects.suggest('nave espacial').length,0);
+  assert.deepEqual(JSON.parse(JSON.stringify(t.projects.dimensions('castelo 8 por 9 com altura 4',t.projects.projects[5]))),{width:8,length:9,height:4});
+  for(const project of t.projects.projects){const plan=t.projects.create({project:project.id});for(const cell of plan.cells)if(cell.z>0)assert(plan.cells.some(b=>b.x===cell.x&&b.y===cell.y&&b.z===cell.z-1),'Every block has support');}
+  assert.throws(()=>t.projects.create({project:'wall',width:17}),/entre 1 e 16/);
+  assert.equal((await t.rpc('snapshot')).data.materials.length,2,'only 1x1 floor furniture');
+  const q=await t.quote();assert(q.ok);assert.equal(q.data.rows[0].quantity,4);assert.equal(q.data.rows[0].missing,3);assert.equal(q.data.rows[0].offer.credits,2);
+  const native=t.fixture.handler.handleRoomObjectEvent;await t.rpc('select');assert.notEqual(t.fixture.handler.handleRoomObjectEvent,native);t.fixture.clickFloor();assert.equal(t.fixture.handler.handleRoomObjectEvent,native);assert.equal(t.fixture.walks,0);assert(t.events.some(e=>e.event==='origin'));t.fixture.clickFloor();assert.equal(t.fixture.walks,1);
+  const built=await t.rpc('build',{quoteId:q.data.id,origin:{roomId:42,x:5,y:5},autoBuy:true});assert(built.ok,built.error);assert.equal(built.data.placed,4);assert.equal(built.data.bought,3);
+  assert.deepEqual(JSON.parse(JSON.stringify(t.fixture.messages.filter(m=>m.header===3492).map(m=>m.args))),[[8,501,'',3]]);assert.equal(t.fixture.messages.filter(m=>m.header===1258).length,4);assert.equal(t.fixture.objects.length,4);t.close();
+  const occupied=setup({stock:0});const qo=await occupied.quote();occupied.fixture.objects.push({id:900,getLocation:()=>({x:5,y:5,z:0}),model:{getValue:()=>1},getDirection:()=>({x:0})});const bad=await occupied.rpc('build',{quoteId:qo.data.id,origin:{roomId:42,x:5,y:5},autoBuy:true});assert.match(bad.error,/já contém/);assert(!occupied.fixture.messages.some(m=>[3492,1258].includes(m.header)));occupied.close();
+  for(const [options,point,pattern] of [[{},[29,29],/ultrapassa/],[{},[5,5],/bloqueada/],[{sloped:true},[5,5],/área plana/]]) {
+    const preflight=setup({...options,stock:0});const qp=await preflight.quote();if(!options.sloped && point[0]===5)preflight.fixture.blocked.add('5,5');assert.match((await preflight.rpc('build',{quoteId:qp.data.id,origin:{roomId:42,x:point[0],y:point[1]},autoBuy:true})).error,pattern);assert(!preflight.fixture.messages.some(m=>[3492,1258].includes(m.header)));preflight.close();
+  }
+  const rights=setup();const qr=await rights.quote();rights.fixture.room.controllerLevel=0;assert.match((await rights.rpc('build',{quoteId:qr.data.id,origin:{roomId:42,x:5,y:5},autoBuy:true})).error,/direitos/);rights.close();
+  const room=setup();const qroom=await room.quote();room.fixture.room.roomId=43;assert.match((await room.rpc('build',{quoteId:qroom.data.id,origin:{roomId:42,x:5,y:5}})).error,/quarto mudou/);room.close();
+  const changed=setup();const qc=await changed.quote();changed.fixture.emit(1866,{});assert.match((await changed.rpc('buy',{quoteId:qc.data.id})).error,/Atualize/);changed.close();
+  const refused=setup({stock:0,purchaseError:true});const qe=await refused.quote();assert.match((await refused.rpc('buy',{quoteId:qe.data.id})).error,/recusou/);assert.equal(refused.fixture.messages.filter(m=>m.header===3492).length,1);refused.close();
+  const timeout=setup({stock:0,purchaseTimeout:true});const qt=await timeout.quote();assert.match((await timeout.rpc('buy',{quoteId:qt.data.id})).error,/não foi confirmada/);assert.equal(timeout.fixture.messages.filter(m=>m.header===3492).length,1);timeout.close();
+  const delivery=setup({stock:0,missingDelivery:true});const qd=await delivery.quote();assert.match((await delivery.rpc('buy',{quoteId:qd.data.id})).error,/ainda não apareceram/);assert.equal(delivery.fixture.messages.filter(m=>m.header===3492).length,1);delivery.close();
+  const cancel=setup({stock:10,cancelAfter:1});const qcancel=await cancel.quote();cancel.window.addEventListener('fixture-cancel',()=>cancel.dispatch('cancel'));const stopped=await cancel.rpc('build',{quoteId:qcancel.data.id,origin:{roomId:42,x:5,y:5}});assert.match(stopped.error,/interrompida/);assert.equal(cancel.fixture.objects.length,1);cancel.close();
+  const dedup=setup({stock:0});const qdup=await dedup.quote();const req=dedup.dispatch('buy',{quoteId:qdup.data.id},'same-request');dedup.dispatch('buy',{quoteId:qdup.data.id},'same-request');assert((await dedup.result(req)).ok);assert.equal(dedup.fixture.messages.filter(m=>m.header===3492).length,1);dedup.close();
+  const concurrent=setup({stock:0});const qcon=await concurrent.quote();const a=concurrent.dispatch('buy',{quoteId:qcon.data.id}),b=concurrent.dispatch('buy',{quoteId:qcon.data.id});assert((await concurrent.result(a)).ok);assert.match((await concurrent.result(b)).error,/andamento/);assert.equal(concurrent.fixture.messages.filter(m=>m.header===3492).length,1);concurrent.close();
+  const stacking=setup({stock:4,noStack:true});const qs=await stacking.quote(1,1,3);assert.match((await stacking.rpc('build',{quoteId:qs.data.id,origin:{roomId:42,x:5,y:5}})).error,/não empilhou/);assert.equal(stacking.fixture.objects.length,2);stacking.close();
+  const escaping=setup();await escaping.rpc('select');const ev=new escaping.window.Event('keydown');Object.assign(ev,{key:'Escape'});escaping.window.dispatchEvent(ev);assert(!Object.hasOwn(escaping.fixture.handler,'handleRoomObjectEvent'));escaping.close();
+  const partial=setup({partialInventory:true});assert.match((await partial.rpc('snapshot')).error,/inventário não respondeu/);assert(!partial.fixture.messages.some(m=>m.header===3492));partial.close();
+  const packs=setup({stock:0,packSize:3,bulk:false});const qp=await packs.quote();const boughtPacks=await packs.rpc('buy',{quoteId:qp.data.id});assert.equal(boughtPacks.data.bought,6);assert.equal(packs.fixture.messages.filter(m=>m.header===3492).length,2);assert(packs.fixture.messages.filter(m=>m.header===3492).every(m=>m.args[3]===1));packs.close();assert([...packs.fixture.registeredEvents.values()].every(list=>list.size===0));
+  const changedStock=setup({stock:1});const qstock=await changedStock.quote();const item=[...changedStock.fixture.items.keys()][0];changedStock.fixture.items.delete(item);changedStock.fixture.emit(159,{itemId:item});assert.match((await changedStock.rpc('build',{quoteId:qstock.data.id,origin:{roomId:42,x:5,y:5},autoBuy:true})).error,/inventário mudou/);assert.equal(changedStock.fixture.messages.filter(m=>m.header===3492).length,0);changedStock.close();
+  const incompatible=setup();incompatible.fixture.registry.delete([...incompatible.fixture.registry].find(([,id])=>id===3150)[0]);assert.match((await incompatible.rpc('snapshot')).error,/não disponibiliza/);incompatible.close();
+  const manifest=JSON.parse(source('manifest.json')),main=manifest.content_scripts.find(s=>s.js?.includes('builder-bridge.js')),ui=manifest.content_scripts.find(s=>s.js?.includes('builder-panel.js'));
+  assert.equal(main.world,'MAIN');assert.equal(main.all_frames,true);assert(main.js.indexOf('anti-flood-bridge.js')<main.js.indexOf('builder-bridge.js'));assert(ui.js.indexOf('builder-panel.js')<ui.js.indexOf('content.js'));
+  console.log('PASS: 8 supported templates, native composer identity/contracts, inventory fragments, catalog offers, signed inventory IDs, exact quantities, confirmed purchases/placements, empty-area preflight before spending, rights/room/catalog changes, errors/timeouts without retry, partial delivery, cancel, deduplication/concurrency, stacking and selection restoration');
+})().catch(error=>{console.error(error);process.exitCode=1;});

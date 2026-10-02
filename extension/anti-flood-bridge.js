@@ -5,6 +5,11 @@
   let prefs = rules.normalize(null), engine = null, connection = null, parseHook = null, chatHook = null, bindHook = null;
   let interval = null, captureTimer = null, connectionGetter = null, queued = false, revision = 0, spriteVersion = 0, currentRoom = null, currentRoomId = null, friendsReady = false;
   let suspended = false, gameListeners = [], statusSignature = '', statusTimer = null;
+  const nativeSubscribers = new Set();
+  window.PixelSquadNativeClient = Object.freeze({
+    get roomEngine() {return engine;}, get connection() {if(!suspended) {const next=engine?._communication?.connection || engine?.roomSessionManager?.communication?.connection;if(next)connect(next);}return connection;},
+    subscribeMessages(callback) {if (typeof callback !== 'function') return () => {}; nativeSubscribers.add(callback); return () => nativeSubscribers.delete(callback);}
+  });
   try {prefs = rules.normalize(JSON.parse(localStorage.getItem('pixelsquad_antiflood') || 'null'));} catch {}
   // Native API shapes and sprite alpha are verified against nitro-renderer 9e9a623.
   // The early bind hook captures the engine before the client's private module scope closes.
@@ -177,7 +182,10 @@
     if (changed) {friends.clear(); fragments.clear(); friendsReady = false;}
     parseHook = hookMethod(connection, 'getMessagesForWrapper', (target, receiver, args) => {
       const messages = Reflect.apply(target, receiver, args);
-      if (receiver === connection && messages?.length) observeFriends(args[0]?.header, messages[0].parser);
+      if (receiver === connection && messages?.length) {
+        observeFriends(args[0]?.header, messages[0].parser);
+        for (const callback of nativeSubscribers) try {callback(args[0]?.header, messages[0].parser);} catch {}
+      }
       return messages;
     });
     // A list already received before capture can still supply its most recent fragment.
@@ -254,6 +262,7 @@
     try {found = validEngine(candidate) ? candidate : validEngine(candidate.roomEngine) ? candidate.roomEngine : null;} catch {}
     if (!found) return;
     engine = found; stopCapture(); watchConnection(engine._communication); queue();
+    window.dispatchEvent(new window.Event('pixelsquad-native-room-ready'));
   }
   for (const name of ['Nitro','nitro','NitroInstance','nitroInstance']) {
     try {const value = window[name]; capture(value?.instance || value);} catch {}

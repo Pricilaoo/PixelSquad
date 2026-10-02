@@ -71,6 +71,11 @@ communication.current = connection;
 assert.equal(communication.connection, connection); assert(!Object.hasOwn(communication, 'connection'));
 const flush = () => {let count = 0; while (microtasks.length) {assert(++count < 100, 'microtask loop'); microtasks.shift()();}};
 flush(); assert.equal(intervals.size, 0);
+assert.equal(window.PixelSquadNativeClient.roomEngine,engine);assert.equal(window.PixelSquadNativeClient.connection,connection);
+let nativeDelivery;const unsubscribeNative=window.PixelSquadNativeClient.subscribeMessages((header,parser)=>{nativeDelivery={header,parser};});
+const unsubscribeThrow=window.PixelSquadNativeClient.subscribeMessages(()=>{throw Error('subscriber must not affect native parser');});
+const nativePayload={builder:true},parsed=connection.getMessagesForWrapper({header:994,parser:nativePayload});assert.equal(parsed[0].parser,nativePayload);assert.equal(nativeDelivery.header,994);assert.equal(nativeDelivery.parser,nativePayload);
+unsubscribeNative();unsubscribeThrow();nativeDelivery=null;connection.getMessagesForWrapper({header:994,parser:nativePayload});assert.equal(nativeDelivery,null);
 const config = changes => {
   const event = new window.Event('message'); Object.assign(event, {source: window, data: {source: 'pixelsquad', type: 'PS_ANTIFLOOD_CONFIG', config: {...defaults, ...changes}}});
   window.dispatchEvent(event); flush();

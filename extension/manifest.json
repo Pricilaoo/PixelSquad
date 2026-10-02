@@ -52,7 +52,9 @@
       ],
       "js": [
         "anti-flood-config.js",
-        "anti-flood-bridge.js"
+        "anti-flood-bridge.js",
+        "builder-projects.js",
+        "builder-bridge.js"
       ],
       "run_at": "document_start",
       "world": "MAIN",
@@ -131,12 +133,15 @@
         "launcher.js",
         "effects-catalog.js",
         "handitems-catalog.js",
+        "builder-projects.js",
+        "builder-panel.js",
         "content.js"
       ],
       "css": [
         "content.css",
         "panel-controls.css",
-        "avatar-generator.css"
+        "avatar-generator.css",
+        "builder-panel.css"
       ],
       "run_at": "document_idle",
       "world": "ISOLATED"

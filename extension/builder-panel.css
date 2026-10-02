@@ -1,0 +1,62 @@
+#pixelsquad-builder{--psb-accent:#8ae9ce;position:fixed;z-index:2147483644;left:calc(50% - 370px);top:5vh;width:740px;max-width:calc(100vw - 16px);color:#eaf5f4;background:#172727;border:1px solid #46635d;border-radius:14px;box-shadow:0 24px 80px #0008;font:13px/1.4 system-ui,sans-serif;overflow:hidden;text-align:left;color-scheme:dark}
+#pixelsquad-builder *{box-sizing:border-box}
+#pixelsquad-builder header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:linear-gradient(110deg,#284c44,#203632);border-bottom:1px solid #52786b;cursor:move;touch-action:none;user-select:none}
+#pixelsquad-builder header small{display:block;font-size:10px;letter-spacing:1.8px;color:var(--psb-accent);margin-bottom:3px}
+#pixelsquad-builder header strong{font-size:19px;color:#fff}
+#pixelsquad-builder header button{font-size:22px;min-width:34px;padding:2px 8px;background:#142d29}
+#pixelsquad-builder .ps-builder-body{max-height:calc(90vh - 73px);overflow:auto;padding:14px 18px}
+#pixelsquad-builder.ps-builder-minimized{width:360px}
+#pixelsquad-builder.ps-builder-minimized .ps-builder-body{display:none}
+#pixelsquad-builder button{border:1px solid #4a625e;border-radius:7px;background:#2c403d;color:#f3faf8;padding:8px 11px;cursor:pointer;font:inherit;transition:background .15s,border-color .15s}
+#pixelsquad-builder button:hover{background:#3b5750;border-color:#8ae9ce}
+#pixelsquad-builder button:disabled{opacity:.45;cursor:default}
+#pixelsquad-builder button:focus-visible,#pixelsquad-builder input:focus-visible,#pixelsquad-builder select:focus-visible{outline:2px solid #8ae9ce;outline-offset:2px}
+#pixelsquad-builder label{display:block;font-size:12px;color:#ccdcd7;margin-bottom:8px}
+#pixelsquad-builder input:not([type=checkbox]),#pixelsquad-builder select{display:block;width:100%;min-width:0;margin-top:5px;border:1px solid #4a625e;border-radius:6px;background:#102220;color:#fff;padding:8px;font:inherit}
+#pixelsquad-builder input:disabled,#pixelsquad-builder select:disabled{opacity:.6}
+#pixelsquad-builder small{display:block;color:#a5beb4;font-size:11px}
+#pixelsquad-builder .ps-builder-room{font-size:11px;color:#91cdb8;margin:0 0 13px}
+#pixelsquad-builder .ps-builder-prompt>div{display:flex;gap:8px;align-items:center}
+#pixelsquad-builder .ps-builder-prompt input{margin:0;flex:1}
+#pixelsquad-builder .ps-builder-prompt button{white-space:nowrap}
+#pixelsquad-builder .ps-builder-prompt>small{margin-top:7px}
+#pixelsquad-builder .ps-builder-projects{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0 16px}
+#pixelsquad-builder .ps-builder-projects button{display:flex;gap:7px;padding:7px 10px;font-size:12px}
+#pixelsquad-builder .ps-builder-projects span{color:#9fe2cd}
+#pixelsquad-builder .ps-builder-projects .selected{background:#375e51;border-color:#8ae9ce;color:#c7ffed}
+#pixelsquad-builder .ps-builder-workspace{display:grid;grid-template-columns:1.12fr 1fr;gap:15px}
+#pixelsquad-builder .ps-builder-preview{display:flex;flex-direction:column;border:1px solid #3d5750;border-radius:10px;background:radial-gradient(ellipse at 50% 45%,#2b4840,#12251f);padding:12px}
+#pixelsquad-builder .ps-builder-preview-title{display:flex;justify-content:space-between;align-items:center}
+#pixelsquad-builder .ps-builder-preview-title button{padding:5px 8px;font-size:11px}
+#pixelsquad-builder [data-id=preview]{height:192px;min-height:140px;display:flex;align-items:center;justify-content:center;margin:10px 0}
+#pixelsquad-builder [data-id=preview] svg{width:100%;height:100%;overflow:visible}
+#pixelsquad-builder [data-id=size]{font-size:12px;margin-bottom:4px}
+#pixelsquad-builder .ps-builder-dimensions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+#pixelsquad-builder .ps-builder-options>small{margin:4px 0}
+#pixelsquad-builder .ps-builder-materials{margin-top:16px;padding-top:14px;border-top:1px solid #395148}
+#pixelsquad-builder .ps-builder-materials>div:first-child{display:flex;justify-content:space-between;align-items:center;gap:10px}
+#pixelsquad-builder h3{margin:0;font-size:14px}
+#pixelsquad-builder .ps-builder-table{overflow-x:auto;margin-top:10px}
+#pixelsquad-builder table{border-collapse:collapse;width:100%;font-size:12px}
+#pixelsquad-builder th{text-align:left;color:#a7c7ba;font-size:10px;white-space:nowrap}
+#pixelsquad-builder td,#pixelsquad-builder th{padding:7px 5px;border-bottom:1px solid #304a41}
+#pixelsquad-builder td:first-child{min-width:140px}
+#pixelsquad-builder td:not(:first-child){font-variant-numeric:tabular-nums}
+#pixelsquad-builder td input{width:72px!important;margin:0!important}
+#pixelsquad-builder .ps-builder-unavailable{color:#e8bf8c}
+#pixelsquad-builder [data-id=cost]{font-size:12px;color:#a5efce}
+#pixelsquad-builder .ps-builder-checkbox{display:flex;align-items:center;gap:9px;margin:12px 0}
+#pixelsquad-builder [type=checkbox]{accent-color:#8ae9ce;width:16px;height:16px;flex-shrink:0}
+#pixelsquad-builder .ps-builder-location{display:flex;justify-content:space-between;align-items:center;gap:12px;border:1px dashed #527265;border-radius:8px;padding:11px;margin-top:16px}
+#pixelsquad-builder .ps-builder-location strong{font-size:12px}
+#pixelsquad-builder [data-id=progress]{margin-top:14px}
+#pixelsquad-builder progress{width:100%;height:9px;accent-color:#8ae9ce}
+#pixelsquad-builder [data-id=status]{font-size:12px;color:#b6ddcf;margin:13px 0}
+#pixelsquad-builder .ps-builder-error{color:#ffc398!important}
+#pixelsquad-builder .ps-builder-actions{display:flex;justify-content:flex-end;gap:8px}
+#pixelsquad-builder .ps-builder-primary{background:#8ae9ce;color:#153a30;border-color:#a9f4df;font-weight:700;padding:10px 18px}
+#pixelsquad-builder .ps-builder-primary:hover{background:#b1f3de}
+#pixelsquad-builder [data-id=stop]{color:#ffd1b0;border-color:#906849}
+#pixelsquad-builder footer{margin-top:14px;text-align:center;font-size:10px;color:#78998b}
+#pixelsquad-builder [hidden]{display:none!important}
+@media(max-width:600px){#pixelsquad-builder{left:8px;top:8px}#pixelsquad-builder .ps-builder-body{max-height:calc(100vh - 90px);padding:12px}#pixelsquad-builder .ps-builder-workspace{grid-template-columns:1fr}#pixelsquad-builder [data-id=preview]{height:155px}#pixelsquad-builder .ps-builder-prompt>div{flex-wrap:wrap}#pixelsquad-builder .ps-builder-prompt input{flex-basis:100%}#pixelsquad-builder .ps-builder-location{align-items:flex-start;flex-direction:column}#pixelsquad-builder header strong{font-size:16px}}
