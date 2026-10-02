@@ -16,7 +16,7 @@
   function displayStatus() {
     const element = document.querySelector('#pixelsquad #ps-antiflood-status'); if (!element) return;
     if (!rules.enabled(prefs)) element.textContent = 'Proteção desativada. Escolha as opções que deseja usar.';
-    else if (status?.room) element.textContent = 'Proteção ativa • ' + status.translucent + ' avatares translúcidos • ' + status.blocked + ' usuários filtrados neste quarto.' +
+    else if (status?.room) element.textContent = 'Proteção ativa • ' + (status.hiddenPlayers ? status.hiddenPlayers + ' jogadores ocultos • ' : '') + status.translucent + ' avatares translúcidos • ' + status.blocked + ' usuários filtrados neste quarto.' +
       ((prefs.nonFriends || prefs.friendsNever) && !status.friendsReady ? ' Aguardando lista de amigos.' : '');
     else element.textContent = status?.connected ? 'Entre em um quarto para aplicar a proteção.' : 'Aguardando conexão com o cliente do jogo.';
   }
@@ -25,6 +25,20 @@
     ++revision; apply({...prefs, ...value});
     try {localStorage.setItem(key, JSON.stringify(prefs));} catch {}
     try {chrome.storage.local.set({[key]: prefs})?.catch?.(() => {});} catch {}
+  }
+  function visibilitySettings(main) {
+    const section = document.createElement('section'); section.className = 'panel-position-settings';
+    const heading = document.createElement('h3'); heading.textContent = 'Jogadores';
+    const label = document.createElement('label'), text = document.createElement('span'); text.textContent = 'Ocultar outros jogadores';
+    const control = document.createElement('input'); control.type = 'checkbox'; control.dataset.antiflood = 'hidePlayers';
+    control.setAttribute('aria-label', text.textContent); control.checked = prefs.hidePlayers;
+    control.addEventListener('input', () => set({hidePlayers: control.checked}));
+    const help = document.createElement('p'); help.className = 'muted';
+    help.textContent = 'Oculta os outros jogadores para você. Desmarque para mostrá-los novamente. Seu avatar continua visível.';
+    label.append(text, control); section.append(heading, label, help);
+    const next = main.querySelector('.panel-position-settings');
+    if (next) next.before(section); else main.append(section);
+    syncControls();
   }
   function settings(main) {
     const statusElement = document.createElement('div'); statusElement.id = 'ps-antiflood-status'; statusElement.className = 'status';
@@ -74,7 +88,7 @@
       row.append(control); filters.append(row);
     }
     const reset = document.createElement('button'); reset.type = 'button'; reset.textContent = 'Restaurar Anti-flood padrão';
-    reset.addEventListener('click', () => set(rules.defaults)); main.append(reset);
+    reset.addEventListener('click', () => set({...rules.defaults, hidePlayers: prefs.hidePlayers})); main.append(reset);
     syncControls(); displayStatus(); send();
   }
   window.addEventListener('message', event => {
@@ -88,10 +102,10 @@
     if (!trusted || status?.connected && !event.data.status?.connected && event.source !== statusSource) return;
     const next = event.data.status || {};
     status = {connected: next.connected === true, room: next.room === true, friendsReady: next.friendsReady === true,
-      translucent: Math.max(0, Number(next.translucent) || 0), blocked: Math.max(0, Number(next.blocked) || 0)};
+      translucent: Math.max(0, Number(next.translucent) || 0), hiddenPlayers: Math.max(0, Number(next.hiddenPlayers) || 0), blocked: Math.max(0, Number(next.blocked) || 0)};
     statusSource = event.source; displayStatus();
   });
-  window.PixelSquadAntiFlood = {get: () => ({...prefs}), set, settings};
+  window.PixelSquadAntiFlood = {get: () => ({...prefs}), set, settings, visibilitySettings};
   const started = revision;
   try {chrome.storage.local.get([key]).then(result => {if (revision === started && result?.[key]) apply(result[key]);}).catch(() => {});} catch {}
   try {chrome.storage.onChanged.addListener((changes, area) => {if (area === 'local' && changes[key]) {++revision; apply(changes[key].newValue);}});} catch {}

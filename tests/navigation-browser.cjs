@@ -50,6 +50,11 @@ async function validateControls(page) {
     await page.locator('#pixelsquad .box').screenshot({path: path.join(previews, name + '.png')});
   };
   await tab('settings'); await screenshot('settings-default');
+  const hidePlayers = page.getByRole('checkbox', {name: 'Ocultar outros jogadores'});
+  assert.equal(await hidePlayers.isChecked(), false);
+  await hidePlayers.locator('..').click({position: {x: 12, y: 12}});
+  assert(await hidePlayers.isChecked()); assert.equal(await page.evaluate(() => JSON.parse(localStorage.pixelsquad_antiflood).hidePlayers), true);
+  await tab('home'); await tab('settings'); assert(await hidePlayers.isChecked());
   const compact = page.locator('[data-appearance="compact"]');
   // Clicking the text/card and using Space keep the native checkbox semantics and persistence.
   await compact.locator('..').click({position: {x: 12, y: 12}});
@@ -75,6 +80,9 @@ async function validateControls(page) {
   await page.getByRole('button', {name: 'Restaurar Anti-flood padrão'}).click();
   assert.equal(await page.locator('[data-antiflood="untilActive"]').isChecked(), false);
   assert(await page.locator('[data-antiflood="namePattern"]').isDisabled());
+  await tab('settings'); assert(await hidePlayers.isChecked(), 'Anti-flood reset keeps the independent visibility preference');
+  await hidePlayers.focus(); await hidePlayers.press('Space'); assert.equal(await hidePlayers.isChecked(), false);
+  assert.equal(await page.evaluate(() => JSON.parse(localStorage.pixelsquad_antiflood).hidePlayers), false);
   await tab('translate');
   const incoming = page.locator('#tr-in'); await incoming.locator('..').click({position: {x: 12, y: 12}});
   assert.equal(await incoming.isChecked(), false);

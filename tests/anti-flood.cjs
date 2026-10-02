@@ -4,6 +4,8 @@ const source = name => fs.readFileSync(path.join(__dirname, '../extension', name
 const rulesContext = vm.createContext({window: {}}); vm.runInContext(source('anti-flood-config.js'), rulesContext);
 const rules = rulesContext.window.PixelSquadAntiFloodRules, defaults = rules.normalize(null);
 assert.equal(defaults.opacity, .3); assert.equal(defaults.minPoints, 3000); assert.equal(rules.enabled(defaults), false);
+assert.equal(defaults.hidePlayers, false); assert.equal(rules.normalize({hidePlayers: 'true'}).hidePlayers, false);
+assert(rules.enabled({...defaults, hidePlayers: true}));
 assert.equal(rules.normalize({opacity: 9, minPoints: -1}).opacity, 1); assert.equal(rules.normalize({opacity: 9, minPoints: -1}).minPoints, 0);
 assert.equal(rules.normalize({opacity: null, namePattern: '<hello>'}).opacity, .3);
 assert.equal(rules.normalize({pointsEnabled: 'true'}).pointsEnabled, false);
@@ -20,6 +22,10 @@ assert.equal(rules.opacity({...defaults, untilActive: true, chatOnlyActivity: tr
 assert.equal(rules.opacity({...defaults, untilActive: true, friendsNever: true}, {...user, isFriend: true}), 1);
 assert.equal(rules.opacity({...defaults, botsPets: true}, {...user, type: 2}), .3);
 assert.equal(rules.opacity({...defaults, idle: true}, {...user, idle: true}), .3);
+assert.equal(rules.opacity({...defaults, hidePlayers: true, friendsNever: true}, {...user, isFriend: true}), 0);
+assert.equal(rules.opacity({...defaults, hidePlayers: true}, {...user, own: true}), 1);
+assert.equal(rules.opacity({...defaults, hidePlayers: true}, {...user, type: 2}), 1);
+assert.equal(rules.opacity({...defaults, hidePlayers: true}, {...user, type: 3}), 1);
 class Dispatcher {
   constructor() {this.listeners = new Map(); this.delivered = [];}
   addEventListener(type, callback) {const list = this.listeners.get(type) || []; list.push(callback); this.listeners.set(type, list);}
@@ -105,5 +111,22 @@ window.dispatchEvent(new window.Event('pageshow')); flush(); assert.equal(alpha(
 config({}); assert.equal(alpha(1), 255); assert.equal(alpha(2), 150); assert.equal(intervals.size, 0);
 assert.equal(chatDispatcher.dispatchEvent, originalChat); assert(!Object.hasOwn(objects[1].visualization, 'update'));
 assert(!Object.hasOwn(objects[1].visualization.sprites[0], 'alpha'));
+config({hidePlayers: true, friendsNever: true, opacity: 1});
+assert.equal(alpha(0), 255); assert.equal(alpha(1), 0); assert.equal(alpha(2), 0);
+assert.equal(objects[1].visualization.sprites[1].alpha, 0, 'all avatar layers must disappear');
+assert.equal(alpha(3), 255); assert.equal(alpha(4), 255);
+const beforeHiddenChat = chatDispatcher.delivered.length;
+say(2, 'Continuo no chat'); assert.equal(chatDispatcher.delivered.length, beforeHiddenChat + 1);
+data.set(5, {name: 'Novo jogador', webID: 15, type: 1, activityPoints: 5000, custom: ''});
+objects.push({...objects[1], id: 5, instanceId: 105, visualization: new Visualization()});
+engine.events.dispatchEvent({type: 'REOE_ADDED'}); flush(); assert.equal(alpha(5), 0);
+room = {...room, roomId: 300}; engine.events.dispatchEvent({type: 'REE_INITIALIZED'}); flush();
+assert.equal(alpha(0), 255); assert.equal(alpha(1), 0); assert.equal(alpha(2), 0); assert.equal(alpha(5), 0);
+sprite.alpha = 180; assert.equal(sprite.raw, 180); assert.equal(alpha(2), 0);
+config({untilActive: true}); assert.equal(alpha(1), 77); assert.equal(alpha(2), 54, 'previous filters resume after hiding is disabled');
+config({}); assert.equal(alpha(1), 255); assert.equal(alpha(2), 180); assert.equal(alpha(5), 255);
+assert.equal(objects[1].visualization.sprites[1].alpha, 50);
+assert(!Object.hasOwn(objects[1].visualization.sprites[0], 'alpha')); assert.equal(intervals.size, 0);
+console.log('PASS: hide other players, own avatar/bots/pets preserved, chat delivered, arriving players, room changes, current native alpha and complete restoration');
 window.dispatchEvent(new window.Event('pagehide')); assert.equal(timers.size, 0);
 console.log('PASS: Anti-flood defaults/bounds, early native capture/bind semantics, connection getter, real sprite counters, no opacity compounding, activity/chat/idle/friends/bots/pets, four local filters, own-user exception, historical bubbles, room changes and native restoration');

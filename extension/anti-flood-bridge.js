@@ -142,9 +142,12 @@
   }
   function report() {
     const room = session(), status = {connected: !!(engine && !engine.disposed && connection), room: !!room,
-      friendsReady, translucent: 0, blocked: 0};
+      friendsReady, translucent: 0, hiddenPlayers: 0, blocked: 0};
     for (const record of records.values()) {
-      if (record.blocked) ++status.blocked; else if (record.factor < 1) ++status.translucent;
+      const user = dataFor(record.object, room);
+      if (record.blocked) ++status.blocked;
+      else if (prefs.hidePlayers && user?.type === 1 && !user.own) ++status.hiddenPlayers;
+      else if (record.factor < 1) ++status.translucent;
     }
     const signature = JSON.stringify(status); if (signature === statusSignature) return; statusSignature = signature;
     const message = {source: 'pixelsquad', type: 'PS_ANTIFLOOD_STATUS', status};
