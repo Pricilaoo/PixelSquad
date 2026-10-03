@@ -65,8 +65,8 @@
     if (!parser || !observedHeaders.has(header)) return;
     if (header === 1032 && String(parser.catalogType).toUpperCase() === 'NORMAL') {
       pages.clear(); catalogPages.clear();
-      const visit = node => {if (!node || node.visible === false) return; if (node.pageId >= 0) {catalogPages.set(Number(node.pageId),{id:Number(node.pageId),name:String(node.localization || node.pageName || `Página ${node.pageId}`)});for (const id of node.offerIds || []) pages.set(Number(id), Number(node.pageId));} for (const child of node.children || []) visit(child);};
-      visit(parser.root); indexReady = true;
+      const visit = (node,isRoot=false) => {if (!node || node.visible === false && !isRoot) return; if (node.visible !== false && node.pageId >= 0) {catalogPages.set(Number(node.pageId),{id:Number(node.pageId),name:String(node.localization || node.pageName || `Página ${node.pageId}`)});for (const id of node.offerIds || []) pages.set(Number(id), Number(node.pageId));} for (const child of node.children || []) visit(child);};
+      visit(parser.root,true); indexReady = true;
     }
     if (header === 804 && String(parser.catalogType).toUpperCase() === 'NORMAL') {
       loadedPages.add(Number(parser.pageId));
