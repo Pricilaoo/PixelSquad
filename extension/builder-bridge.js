@@ -1,7 +1,9 @@
 (() => {
   if (window.__PIXELSQUAD_BUILDER_BRIDGE__ || !window.PixelSquadBuilderProjects) return;
   window.__PIXELSQUAD_BUILDER_BRIDGE__ = true;
-  const projects = window.PixelSquadBuilderProjects, FLOOR = 10, inventory = new Map(), fragments = new Set(), pages = new Map(), offers = new Map(), quotes = new Map(), requests = new Map(), waiters = new Set();
+  const projects = window.PixelSquadBuilderProjects, FLOOR = 10, inventory = new Map(), fragments = new Set(), pages = new Map(), offers = new Map(), quotes = new Map(), requests = new Map(), waiters = new Set(), stockByType = new Map(), catalogPages = new Map(), loadedPages = new Set(), offersByType = new Map();
+  const observedHeaders = new Set([1032,804,994,104,159,3151,1866,2491,869,1404,3770,1534]);
+  let metadataCache=null, syncPending=null;
   let native = null, connection = null, unsubscribe = null, inventoryReady = false, indexReady = false, catalogRevision = 0, fragmentTotal = 0, selection = null, job = null, serial = 0, latestPlacement = null, nativeEvents=[];
   const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
   const trusted = event => event.source === window || event.source === window.top && /^https:\/\/([\w-]+\.)*habblet\.city$/.test(event.origin || '');
@@ -12,7 +14,7 @@
     if (connection !== native?.connection) {
       if (job) job.cancelled = true;
       releaseEvents();
-      connection = native?.connection; inventory.clear(); fragments.clear(); inventoryReady = indexReady = false; pages.clear(); offers.clear(); quotes.clear(); ++catalogRevision;
+      connection = native?.connection; clearInventory(); fragments.clear(); inventoryReady = indexReady = false; pages.clear(); catalogPages.clear(); loadedPages.clear(); offersByType.clear(); metadataCache=null; offers.clear(); quotes.clear(); ++catalogRevision;
     }
     return connection;
   }
@@ -60,40 +62,59 @@
   }
   function wake() {for (const callback of [...waiters]) callback();}
   function observe(header, parser) {
-    if (!parser) return;
-    if (header === 1032 && parser.catalogType === 'NORMAL') {
-      pages.clear();
-      const visit = node => {if (!node) return; if (node.visible !== false && node.pageId >= 0) for (const id of node.offerIds || []) pages.set(Number(id), Number(node.pageId)); for (const child of node.children || []) visit(child);};
+    if (!parser || !observedHeaders.has(header)) return;
+    if (header === 1032 && String(parser.catalogType).toUpperCase() === 'NORMAL') {
+      pages.clear(); catalogPages.clear();
+      const visit = node => {if (!node || node.visible === false) return; if (node.pageId >= 0) {catalogPages.set(Number(node.pageId),{id:Number(node.pageId),name:String(node.localization || node.pageName || `Página ${node.pageId}`)});for (const id of node.offerIds || []) pages.set(Number(id), Number(node.pageId));} for (const child of node.children || []) visit(child);};
       visit(parser.root); indexReady = true;
     }
-    if (header === 804 && parser.catalogType === 'NORMAL') {
+    if (header === 804 && String(parser.catalogType).toUpperCase() === 'NORMAL') {
+      loadedPages.add(Number(parser.pageId));
       for (const offer of parser.offers || []) {
         const product = offer.products?.[0];
-        if (offer.products?.length !== 1 || product?.productType !== 's' || offer.rent || offer.isPet || product.uniqueLimitedItem || !Number.isSafeInteger(product.productCount) || product.productCount <= 0) continue;
+        if (offer.products?.length !== 1 || String(product?.productType).toLowerCase() !== 's' || offer.rent || offer.isPet || product.uniqueLimitedItem || !Number.isSafeInteger(product.productCount) || product.productCount <= 0) continue;
         if (![offer.priceCredits, offer.priceActivityPoints].every(value => Number.isFinite(value) && value >= 0)) continue;
-        offers.set(Number(offer.offerId), {pageId:parser.pageId, offerId:offer.offerId, id:product.furniClassId, productCount:product.productCount, extra:String(product.extraParam || ''), credits:offer.priceCredits, points:offer.priceActivityPoints, currency:offer.priceActivityPointsType, bulk:!!offer.bundlePurchaseAllowed});
+        const id=Number(offer.offerId), value={pageId:Number(parser.pageId), offerId:id, id:Number(product.furniClassId), productCount:product.productCount, extra:String(product.extraParam || ''), credits:offer.priceCredits, points:offer.priceActivityPoints, currency:offer.priceActivityPointsType, bulk:!!offer.bundlePurchaseAllowed};
+        const previous=offers.get(id);offers.set(id,previous && JSON.stringify(previous)===JSON.stringify(value)?previous:value);
+        pages.set(id,value.pageId);const ids=offersByType.get(value.id)||new Set();ids.add(id);offersByType.set(value.id,ids);
       }
     }
     if (header === 994) {
-      if (parser.fragmentNumber === 0 || fragmentTotal !== parser.totalFragments) {inventory.clear(); fragments.clear(); fragmentTotal = parser.totalFragments; inventoryReady = false;}
-      for (const item of parser.fragment?.values?.() || []) inventory.set(item.itemId, copyItem(item));
-      fragments.add(parser.fragmentNumber); inventoryReady = fragmentTotal > 0 && fragments.size === fragmentTotal;
+      if (parser.fragmentNumber === 0 || fragmentTotal !== parser.totalFragments) {clearInventory(); fragments.clear(); fragmentTotal = parser.totalFragments; inventoryReady = false;}
+      for (const item of parser.fragment?.values?.() || []) putItem(item);
+      fragments.add(parser.fragmentNumber); inventoryReady = fragmentTotal === 0 && inventory.size === 0 || fragmentTotal > 0 && fragments.size === fragmentTotal;
     }
-    if (header === 104) for (const item of parser.items || []) inventory.set(item.itemId, copyItem(item));
-    if (header === 159) inventory.delete(parser.itemId);
+    if (header === 104) for (const item of parser.items || []) putItem(item);
+    if (header === 159) removeItem(Number(parser.itemId));
     if (header === 3151) inventoryReady = false;
-    if (header === 1866) {indexReady = false; offers.clear(); pages.clear(); quotes.clear(); ++catalogRevision; if (job) job.error = 'O catálogo mudou. Confira os preços novamente.';}
-    if (header === 2491) {inventoryReady = indexReady = false; inventory.clear(); fragments.clear(); pages.clear(); offers.clear(); quotes.clear(); ++catalogRevision; if (job) job.cancelled = true;}
+    if (header === 1866) {indexReady = false; offers.clear(); offersByType.clear(); pages.clear(); catalogPages.clear(); loadedPages.clear(); quotes.clear(); ++catalogRevision; if (job) job.error = 'O catálogo mudou. Confira os preços novamente.';}
+    if (header === 2491) {inventoryReady = indexReady = false; clearInventory(); fragments.clear(); pages.clear(); catalogPages.clear(); loadedPages.clear(); offersByType.clear(); metadataCache=null; offers.clear(); quotes.clear(); ++catalogRevision; if (job) job.cancelled = true;}
     if (header === 869 && job?.purchase?.offerId === parser.offer?.offerId) job.purchase.confirmed = true;
     if ((header === 1404 || header === 3770) && job?.purchase) job.error = 'O catálogo recusou a compra. Verifique o saldo e a disponibilidade dos itens.';
     if (header === 1534) latestPlacement = parser.item && {ref:parser.item.itemId, id:parser.item.spriteId, x:parser.item.x, y:parser.item.y, z:parser.item.z};
     wake();
   }
-  function copyItem(item) {return {itemId:item.itemId, ref:item.ref, id:item.spriteId, floor:item.furniType === 'S' && !item.isWallItem, free:item.flatId === 0 && !item.rentable};}
-  function stock(id) {return [...inventory.values()].filter(item => item.floor && item.free && item.id === id && Number.isSafeInteger(item.itemId) && item.itemId !== 0 && Number.isSafeInteger(item.ref) && item.ref > 0);}
-  function metadata() {
-    return [...(engine()?.sessionDataManager?._floorItems?.values?.() || [])].filter(item => Number(item.tileSizeX) === 1 && Number(item.tileSizeY) === 1 && Number.isSafeInteger(item.id) && item.id > 0).map(item => ({id:item.id, name:String(item.name || item.className || `Mobi ${item.id}`), className:String(item.className || ''), offerId:Number(item.purchaseOfferId), block:/bloco|block|cube|cubo|brick|tijolo|constru/i.test(`${item.name} ${item.className}`), stock:inventoryReady ? stock(item.id).length : null})).sort((a,b) => Number(b.block)-Number(a.block) || a.name.localeCompare(b.name));
+  function copyItem(item) {return {itemId:Number(item.itemId), ref:Number(item.ref), id:Number(item.spriteId), floor:String(item.furniType).toUpperCase() === 'S' && !item.isWallItem, free:Number(item.flatId) === 0 && !item.rentable};}
+  function clearInventory() {inventory.clear();stockByType.clear();}
+  function removeItem(id) {const item=inventory.get(id);if(item){const group=stockByType.get(item.id);group?.delete(id);if(group&&!group.size)stockByType.delete(item.id);}inventory.delete(id);}
+  function putItem(raw) {const item=copyItem(raw);removeItem(item.itemId);inventory.set(item.itemId,item);if(item.floor&&item.free&&Number.isSafeInteger(item.itemId)&&item.itemId!==0&&Number.isSafeInteger(item.ref)&&item.ref>0){const group=stockByType.get(item.id)||new Map();group.set(item.itemId,item);stockByType.set(item.id,group);}}
+  function stock(id) {return [...(stockByType.get(id)?.values() || [])];}
+  function nativeFurniture() {
+    const manager=engine()?.sessionDataManager;if(!manager)return [];
+    const map=manager._floorItems;
+    if(metadataCache?.manager===manager && metadataCache.size===(map?.size??-1) && metadataCache.items.length)return metadataCache.items;
+    let source;
+    try {source=manager.getAllFurnitureData?.(null);}finally{manager.removePendingFurniDataListener?.(null);}
+    source=source || (map?.values ? [...map.values()] : []);
+    const items=source.filter(item=>String(item.type||'s').toLowerCase()!=='i' && Number(item.tileSizeX)===1 && Number(item.tileSizeY)===1 && Number.isSafeInteger(Number(item.id)) && Number(item.id)>0).map(item=>({id:Number(item.id),name:String(item.name||item.className||`Mobi ${item.id}`),className:String(item.className||''),offerId:Number(item.purchaseOfferId),block:/bloco|block|cube|cubo|brick|tijolo|constru/i.test(`${item.name} ${item.className}`)})).sort((a,b)=>Number(b.block)-Number(a.block)||a.name.localeCompare(b.name));
+    metadataCache={manager,size:map?.size??-1,items};return items;
   }
+  function offerFor(id, preferred) {
+    const exact=offers.get(preferred);if(exact?.id===id)return exact;
+    for(const offerId of offersByType.get(id)||[]) {const value=offers.get(offerId);if(value?.id===id)return value;}
+    return null;
+  }
+  function metadata() {return nativeFurniture().map(item=>({...item,stock:inventoryReady?(stockByType.get(item.id)?.size||0):null,inShop:!!offerFor(item.id,item.offerId),pageIds:[...(offersByType.get(item.id)||[])].map(id=>offers.get(id)?.pageId)}));}
   function check(run) {
     if (run.cancelled) throw Error('Operação interrompida. Os itens já comprados e colocados foram mantidos.');
     if (run.error) throw Error(run.error);
@@ -112,32 +133,46 @@
       waiters.add(poll); poll();
     });
   }
-  async function synchronize() {
+  async function synchronize(options={}) {
+    if(syncPending)return syncPending;
     ready();
-    if (!inventoryReady) {send(3150, [], []); await until(() => inventoryReady, 10000, null, 'O inventário não respondeu. Abra o inventário do jogo e atualize os materiais.');}
-    if (!indexReady) {send(1195, ['NORMAL'], ['NORMAL']); await until(() => indexReady, 10000, null, 'O catálogo não respondeu. Abra o catálogo do jogo e atualize os materiais.');}
+    syncPending=(async()=>{
+      const warnings=[];
+      const tasks=[];
+      if(options.force || !inventoryReady) tasks.push((async()=>{inventoryReady=false;fragments.clear();send(3150,[],[]);await until(()=>inventoryReady,10000,null,'O inventário não respondeu. Abra o inventário do jogo e atualize os materiais.');})().catch(error=>warnings.push(error.message)));
+      if(options.force || !indexReady) tasks.push((async()=>{indexReady=false;send(1195,['NORMAL'],['NORMAL']);await until(()=>indexReady,10000,null,'A loja não respondeu. Abra o catálogo do jogo e atualize os materiais.');})().catch(error=>warnings.push(error.message)));
+      await Promise.all(tasks);return warnings;
+    })();
+    try{return await syncPending;}finally{syncPending=null;}
   }
-  async function snapshot() {
-    const room=ready(); await synchronize();
-    ready(room.roomId);
-    return {roomId:room.roomId, rights:!room.isSpectator && room.controllerLevel >= 1, materials:metadata(), inventoryReady};
+  async function loadPage(pageId) {
+    if(job)throw Error('Aguarde a operação atual.');ready();pageId=Number(pageId);
+    if(!Number.isSafeInteger(pageId)||!catalogPages.has(pageId))throw Error('Escolha uma página disponível na loja.');
+    loadedPages.delete(pageId);send(412,[pageId,-1,'NORMAL'],[pageId,-1,'NORMAL']);
+    await until(()=>loadedPages.has(pageId),8000,null,'A página da loja não respondeu. Abra essa página no catálogo do jogo e tente novamente.');
+    return snapshot();
+  }
+  async function snapshot(options={}) {
+    const room=ready();if(options.force)metadataCache=null; const warnings=await synchronize(options);ready(room.roomId);
+    const materials=metadata();if(!materials.length)warnings.push('Os dados dos mobis ainda não carregaram. Abra a loja ou o inventário e atualize os materiais.');
+    return {roomId:room.roomId,rights:!room.isSpectator&&room.controllerLevel>=1,materials,inventoryReady,indexReady,warnings,pages:[...catalogPages.values()],inventoryCount:inventoryReady?[...stockByType.values()].reduce((n,items)=>n+items.size,0):null};
   }
   async function quote(data) {
     if (job) throw Error('Aguarde a operação atual ou clique em Parar.');
-    const room=permitted(); await synchronize();
+    const room=permitted(); await synchronize();if(!inventoryReady)throw Error('Aguarde a leitura completa do inventário antes de calcular ou comprar materiais.');
     const plan=projects.create(data.plan), requirements=projects.requirements(plan,data.materials), list=metadata(), rows=[];
     const revision=catalogRevision;
     for (const requirement of requirements) {
       const item=list.find(value=>value.id === requirement.id); if(!item) throw Error('Use apenas mobis de piso com tamanho 1 × 1.');
-      let offer=offers.get(item.offerId), purchaseError=null;
+      let offer=offerFor(item.id,item.offerId), purchaseError=null;
       if(!offer && pages.has(item.offerId)) {
         send(412,[pages.get(item.offerId),item.offerId,'NORMAL'],[pages.get(item.offerId),item.offerId,'NORMAL']);
-        try {await until(()=>offers.get(item.offerId),4000,null,'Este item não possui uma oferta compatível no catálogo.');} catch(error) {purchaseError=error.message;}
-        offer=offers.get(item.offerId);
+        try {await until(()=>loadedPages.has(pages.get(item.offerId)),4000,null,'Este item não possui uma oferta compatível no catálogo.');} catch(error) {purchaseError=error.message;}
+        offer=offerFor(item.id,item.offerId);
       }
       if(offer?.id !== item.id) offer=null;
       const available=stock(item.id).length, missing=Math.max(0,requirement.quantity-available), packs=offer ? Math.ceil(missing/offer.productCount) : 0;
-      rows.push({...requirement,name:item.name,available,missing,packs,buyQuantity:offer ? packs*offer.productCount : 0,offer:offer || null,purchaseError:purchaseError || (!offer ? 'Sem oferta de compra compatível. Você pode usar itens do inventário.' : null)});
+      rows.push({...requirement,name:item.name,available,missing,packs,buyQuantity:offer ? packs*offer.productCount : 0,offer:offer || null,purchaseError:purchaseError || (!offer ? 'Escolha a página deste item na loja para consultar a oferta. Os itens do inventário continuam disponíveis.' : null)});
     }
     permitted(room.roomId); if(revision !== catalogRevision) throw Error('O catálogo mudou. Atualize a lista de materiais.');
     const id=`quote-${Date.now()}-${++serial}`, value={id,roomId:room.roomId,revision,plan,materials:{...data.materials},rows};
@@ -225,7 +260,7 @@
     permitted(value.roomId);
     const run={target,requestId,quote:value,roomId:value.roomId,revision:value.revision,phase:'prepare',placed:0,bought:0,cancelled:false,error:null}; job=run; stopSelection();
     try {
-      await synchronize();check(run);
+      await synchronize();check(run);if(!inventoryReady)throw Error('Aguarde a leitura completa do inventário antes de construir ou comprar.');
       if(action==='build') area(value.plan,data.origin,value.roomId);
       if(action==='buy' || data.autoBuy===true) await purchases(run,action==='buy'?data.quantities:null);
       check(run);
@@ -245,7 +280,7 @@
             if(point && point.x===x && point.y===y) return {z:point.z};
             return null;
           },10000,run,'O jogo não confirmou a colocação do bloco. A construção foi interrompida.');
-          inventory.delete(item.itemId); ++run.placed; progress(run);
+          removeItem(item.itemId); ++run.placed; progress(run);
           if(heights.has(key) && !(placed.z>heights.get(key)+.001)) throw Error('Este mobi não empilhou como previsto. A construção foi interrompida.');
           heights.set(key,placed.z); await sleep(450);
         }
@@ -263,7 +298,8 @@
       try {
         let result;
         if(action==='discover') {const room=ready();result={roomId:room.roomId};}
-        else if(action==='snapshot') result=await snapshot();
+        else if(action==='snapshot') result=await snapshot(data);
+        else if(action==='catalog-page') result=await loadPage(data.pageId);
         else if(action==='quote') result=await quote(data);
         else if(action==='select') result=select(event.source,requestId);
         else if(action==='buy'||action==='build') result=await execute(event.source,requestId,action,data);
@@ -274,6 +310,7 @@
     })();
     requests.set(requestId,{target:event.source,promise}); if(requests.size>100) requests.delete(requests.keys().next().value);
     post(event.source,await promise);
+    if(['snapshot','quote','catalog-page','discover'].includes(action))requests.delete(requestId);
   }
   window.addEventListener('message',handle);
   window.addEventListener('pixelsquad-native-room-ready',connect);

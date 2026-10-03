@@ -29,7 +29,7 @@
 #pixelsquad-builder .ps-builder-preview-title{display:flex;justify-content:space-between;align-items:center}
 #pixelsquad-builder .ps-builder-preview-title button{padding:5px 8px;font-size:11px}
 #pixelsquad-builder [data-id=preview]{height:192px;min-height:140px;display:flex;align-items:center;justify-content:center;margin:10px 0}
-#pixelsquad-builder [data-id=preview] svg{width:100%;height:100%;overflow:visible}
+#pixelsquad-builder [data-id=preview] canvas{width:100%;height:100%;overflow:visible}
 #pixelsquad-builder [data-id=size]{font-size:12px;margin-bottom:4px}
 #pixelsquad-builder .ps-builder-dimensions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 #pixelsquad-builder .ps-builder-options>small{margin:4px 0}
@@ -60,3 +60,5 @@
 #pixelsquad-builder footer{margin-top:14px;text-align:center;font-size:10px;color:#78998b}
 #pixelsquad-builder [hidden]{display:none!important}
 @media(max-width:600px){#pixelsquad-builder{left:8px;top:8px}#pixelsquad-builder .ps-builder-body{max-height:calc(100vh - 90px);padding:12px}#pixelsquad-builder .ps-builder-workspace{grid-template-columns:1fr}#pixelsquad-builder [data-id=preview]{height:155px}#pixelsquad-builder .ps-builder-prompt>div{flex-wrap:wrap}#pixelsquad-builder .ps-builder-prompt input{flex-basis:100%}#pixelsquad-builder .ps-builder-location{align-items:flex-start;flex-direction:column}#pixelsquad-builder header strong{font-size:16px}}
+
+#pixelsquad-builder [data-id=sources],#pixelsquad-builder [data-id=material-results]{margin:6px 0;color:#a5beb4}

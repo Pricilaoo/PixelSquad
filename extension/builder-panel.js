@@ -1,6 +1,7 @@
 (() => {
   if(window.top!==window || window.PixelSquadBuilder || !window.PixelSquadBuilderProjects) return;
   const projects=window.PixelSquadBuilderProjects, pending=new Map();
+  let searchTimer=null, previewKey='', searchItems=[];
   let root=null,target=null,serial=0,snapshot=null,quote=null,origin=null,busy=false,selectionId=null,operationId=null,current='platform',rotation=0,refreshRevision=0;
   const escape=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
   const get=id=>root?.querySelector(`[data-id="${id}"]`);
@@ -56,8 +57,15 @@
       const minX=Math.min(...points.map(p=>p.x))-scale-8,maxX=Math.max(...points.map(p=>p.x))+scale+8,minY=Math.min(...points.map(p=>p.y))-zscale-8,maxY=Math.max(...points.map(p=>p.y))+scale+12;
       const colors={base:['#82ddcb','#45a997','#2a796e'],body:['#bfabf6','#8972c3','#625089'],finish:['#ffcf8d','#cf9b54','#947141']};
       points.sort((a,b)=>a.cell.x+a.cell.y-b.cell.x-b.cell.y || a.cell.z-b.cell.z);
-      const cubes=points.map(({cell,x,y})=>{const c=colors[cell.role];return `<g><path d="M${x},${y-zscale} l${scale},${scale*.5} -${scale},${scale*.5} -${scale},-${scale*.5} Z" fill="${c[0]}"/><path d="M${x-scale},${y+scale*.5-zscale} l${scale},${scale*.5} 0,${zscale} -${scale},-${scale*.5} Z" fill="${c[1]}"/><path d="M${x},${y+scale-zscale} l${scale},-${scale*.5} 0,${zscale} -${scale},${scale*.5} Z" fill="${c[2]}"/></g>`;}).join('');
-      get('preview').innerHTML=`<svg role="img" aria-label="Prévia de ${escape(plan.name)} com ${plan.cells.length} blocos" viewBox="${minX} ${minY} ${maxX-minX} ${maxY-minY}">${cubes}</svg>`;
+      const key=JSON.stringify(planInput());
+      if(key!==previewKey || !get('preview').firstChild) {
+        const canvas=document.createElement('canvas');canvas.width=640;canvas.height=360;canvas.setAttribute('role','img');canvas.setAttribute('aria-label',`Prévia de ${plan.name} com ${plan.cells.length} blocos`);
+        const ctx=canvas.getContext('2d'),width=maxX-minX,height=maxY-minY,zoom=Math.min(canvas.width/width,canvas.height/height);
+        ctx.translate((canvas.width-width*zoom)/2-minX*zoom,(canvas.height-height*zoom)/2-minY*zoom);ctx.scale(zoom,zoom);
+        const polygon=(vertices,color)=>{ctx.fillStyle=color;ctx.beginPath();vertices.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.closePath();ctx.fill();};
+        for(const {cell,x,y} of points){const c=colors[cell.role];polygon([[x,y-zscale],[x+scale,y+scale*.5-zscale],[x,y+scale-zscale],[x-scale,y+scale*.5-zscale]],c[0]);polygon([[x-scale,y+scale*.5-zscale],[x,y+scale-zscale],[x,y+scale],[x-scale,y+scale*.5]],c[1]);polygon([[x,y+scale-zscale],[x+scale,y+scale*.5-zscale],[x+scale,y+scale*.5],[x,y+scale]],c[2]);}
+        get('preview').replaceChildren(canvas);previewKey=key;
+      }
       get('size').textContent=`${plan.width} × ${plan.length} pisos · ${plan.height} ${plan.height===1?'camada':'camadas'} · ${plan.cells.length} blocos`;
       get('project-name').textContent=plan.name;
       status('Confira a prévia e clique em Atualizar materiais antes de construir.');
@@ -87,28 +95,43 @@
     const values=[...totals].filter(([,amount])=>amount>0).map(([unit,amount])=>`${amount} ${unit}`);
     get('cost').textContent=unknown?'Existem itens sem oferta de compra. Use o inventário ou escolha outro bloco.':`${get('auto-buy').checked?'Compra automática para o projeto':'Compra selecionada'}: ${values.join(' + ') || 'sem custo'}${quote.rows.some(row=>row.offer?.productCount>1)?' · quantidades arredondadas por pacote do catálogo':''}`;
   }
+  function acceptSnapshot(value) {
+    snapshot=value;searchItems=value.materials.map(item=>({...item,search:projects.normalize(`${item.name} ${item.className} ${item.id}`)}));
+    const selected=get('catalog-page').value;get('catalog-page').innerHTML='<option value="">Escolha uma página da loja</option>'+(value.pages||[]).map(page=>`<option value="${page.id}">${escape(page.name)}</option>`).join('');if((value.pages||[]).some(page=>String(page.id)===selected))get('catalog-page').value=selected;
+    get('sources').textContent=`Inventário: ${value.inventoryReady?value.inventoryCount+' mobis':'aguardando resposta'} · Loja: ${value.indexReady?(value.pages?.length||0)+' páginas':'aguardando resposta'}. Apenas mobis de 1 × 1 são compatíveis com estes projetos.`;
+  }
   async function refresh() {
     if(busy)return;const revision=++refreshRevision;setBusy(true);status('Consultando o catálogo e o inventário…');
     try {
       if(!target) await rpc('discover',{}, {discover:true,timeout:8000});
       if(!root||revision!==refreshRevision)return;
-      snapshot=await rpc('snapshot');if(!root||revision!==refreshRevision)return;
+      const received=await rpc('snapshot',{force:true});if(!root||revision!==refreshRevision)return;acceptSnapshot(received);
       get('room').textContent=`Quarto ${snapshot.roomId}${snapshot.rights?' · construção disponível':' · sem direitos de construção'}`;
       if(origin?.roomId!==snapshot.roomId) {origin=null;get('origin').textContent='Nenhum piso selecionado';}
       populate();
+      if(!snapshot.inventoryReady || !Object.values(materials()).some(Boolean)){quote=null;status(snapshot.warnings?.join(' ') || 'Escolha os blocos do inventário ou carregue uma página da loja.',!!snapshot.warnings?.length);return;}
       const value=await rpc('quote',{plan:planInput(),materials:materials()});if(!root||revision!==refreshRevision)return;quote=value;
       get('materials-table').innerHTML=`<table><thead><tr><th>Mobi do catálogo</th><th>Projeto</th><th>Tenho</th><th>Faltam</th><th>Comprar</th><th>Custo</th></tr></thead><tbody>${quote.rows.map(row=>`<tr><td><strong>${escape(row.name)}</strong><small>#${row.id}${row.offer?` · ${row.offer.productCount} por pacote`:''}</small>${row.purchaseError?`<small class="ps-builder-unavailable">${escape(row.purchaseError)}</small>`:''}</td><td>${row.quantity}</td><td>${row.available}</td><td>${row.missing}</td><td><input type="number" min="0" max="4096" step="1" data-buy-id="${row.id}" data-unavailable="${row.offer?'false':'true'}" value="${row.missing}" aria-label="Quantidade de ${escape(row.name)} para comprar" ${row.offer?'':'disabled'}></td><td data-price-id="${row.id}"></td></tr>`).join('')}</tbody></table>`;
-      costs();status('Materiais conferidos. Selecione o piso para construir.');
+      costs();status(snapshot.warnings?.join(' ') || 'Materiais conferidos. Selecione o piso para construir.',!!snapshot.warnings?.length);
     } catch(error) {if(root&&revision===refreshRevision)status(error.message,true);} finally {if(root&&revision===refreshRevision)setBusy(false);}
   }
   function populate() {
-    const query=projects.normalize(get('material-search').value);
+    if(!snapshot)return;const query=projects.normalize(get('material-search').value),source=get('material-source').value;
+    const matches=searchItems.filter(item=>(!query||item.search.includes(query)) && (source==='inventory'?item.stock>0:source==='shop'?item.inShop:true));
+    const limited=matches.slice(0,100);
     for(const role of ['base','body','finish']) {
-      const select=get(role),previous=Number(select.value),filtered=snapshot.materials.filter(item=>!query || projects.normalize(`${item.name} ${item.className} ${item.id}`).includes(query) || item.id===previous);
-      select.innerHTML='<option value="0">Escolha um bloco de 1 × 1</option>'+filtered.map(item=>`<option value="${item.id}">${escape(item.name)} · #${item.id} · ${item.stock??'?'} no inventário</option>`).join('');
-      const chosen=filtered.find(item=>item.id===previous) || (!previous&&filtered.find(item=>item.block && item.stock>0)) || (!previous&&filtered.find(item=>item.block));select.value=String(chosen?.id||0);
+      const select=get(role),previous=Number(select.value),chosen=searchItems.find(item=>item.id===previous) || (!previous&&matches.find(item=>item.block && item.stock>0)) || (!previous&&matches.find(item=>item.block));
+      const visible=limited.slice();if(chosen&&!visible.some(item=>item.id===chosen.id))visible.unshift(chosen);
+      select.innerHTML='<option value="0">Escolha um bloco de 1 × 1</option>'+visible.map(item=>`<option value="${item.id}">${escape(item.name)} · #${item.id} · ${item.stock??'?'} no inventário${item.inShop?' · loja':''}</option>`).join('');select.value=String(chosen?.id||0);
     }
+    get('material-results').textContent=matches.length>100?`${matches.length} resultados; mostrando 100. Digite mais detalhes para encontrar o item.`:`${matches.length} mobis compatíveis encontrados.`;
   }
+  async function catalogPage() {
+    if(busy||!get('catalog-page').value)return;const active=root;setBusy(true);status('Consultando a página da loja…');
+    try {const value=await rpc('catalog-page',{pageId:Number(get('catalog-page').value)});if(root!==active)return;acceptSnapshot(value);populate();invalidateMaterials();status('Página da loja vinculada. Escolha os blocos e atualize os materiais.');}
+    catch(error){if(root===active)status(error.message,true);}finally{if(root===active)setBusy(false);}
+  }
+  function invalidateMaterials(){quote=null;get('materials-table').innerHTML='';get('cost').textContent='Atualize os materiais para conferir as quantidades e os preços.';}
   async function selectFloor() {
     try {if(!target)await rpc('discover',{}, {discover:true,timeout:8000});await rpc('select');status('Clique no piso do quarto onde a construção deve começar. Esc cancela.');root.classList.add('ps-builder-minimized');get('minimize').setAttribute('aria-expanded','false');document.getElementById('ps-close')?.click();}
     catch(error){status(error.message,true);}
@@ -124,7 +147,7 @@
     } catch(error) {if(root===activeRoot)status(error.message,true);} finally {if(root===activeRoot){setBusy(false);operationId=null;}}
   }
   function close() {
-    ++refreshRevision;if(target)rpc('cancel').catch(()=>{});
+    ++refreshRevision;clearTimeout(searchTimer);searchTimer=null;previewKey='';searchItems=[];if(target)rpc('cancel').catch(()=>{});
     root?.remove();window.removeEventListener('resize',resize);root=null;busy=false;selectionId=null;operationId=null;quote=null;origin=null;
   }
   function movable() {
@@ -141,7 +164,7 @@
     if(window.PixelSquadGame?.refresh()!==true)return;
     if(root){root.classList.remove('ps-builder-minimized');get('minimize').setAttribute('aria-expanded','true');return;}
     root=document.createElement('section');root.id='pixelsquad-builder';root.setAttribute('role','dialog');root.setAttribute('aria-label','Construtor de projetos PixelSquad');
-    root.innerHTML=`<header data-id="header"><div><small>PIXELSQUAD / CONSTRUÇÃO</small><strong>Construtor de projetos</strong></div><div><button data-id="minimize" aria-label="Minimizar ou expandir construtor" aria-expanded="true">−</button><button data-id="close" aria-label="Fechar construtor">×</button></div></header><div class="ps-builder-body"><p data-id="room" class="ps-builder-room">Conectando ao quarto…</p><div class="ps-builder-prompt"><label for="ps-builder-description">O que você quer construir?</label><div><input id="ps-builder-description" data-id="description" placeholder="Ex.: castelo 8x8 com altura 4" maxlength="300"><button data-id="suggest">Buscar projetos</button></div><small data-id="suggestion"></small></div><div data-id="projects" class="ps-builder-projects"></div><div class="ps-builder-workspace"><div class="ps-builder-preview"><div class="ps-builder-preview-title"><strong data-id="project-name"></strong><button data-id="rotate" title="Girar projeto 90 graus">↻ Girar</button></div><div data-id="preview"></div><strong data-id="size"></strong><small>Prévia em blocos. A altura final depende dos mobis escolhidos.</small></div><div class="ps-builder-options"><div class="ps-builder-dimensions"><label>Largura<input data-id="width" type="number" min="1" max="16" value="5"></label><label>Comprimento<input data-id="length" type="number" min="1" max="16" value="5"></label><label>Altura<input data-id="height" type="number" min="1" max="8" value="1"></label></div><label>Buscar mobis do catálogo<input data-id="material-search" placeholder="Nome do bloco ou número do mobi"></label><label>Base<select data-id="base"><option value="0">Carregando catálogo…</option></select></label><label>Estrutura<select data-id="body"><option value="0">Carregando catálogo…</option></select></label><label>Acabamento<select data-id="finish"><option value="0">Carregando catálogo…</option></select></label><small>Use mobis de 1 × 1 que permitam empilhamento.</small></div></div><div class="ps-builder-materials"><div><h3>Materiais e compra</h3><button data-id="refresh">Atualizar materiais</button></div><div data-id="materials-table" class="ps-builder-table"></div><p data-id="cost"></p><label class="ps-builder-checkbox"><input type="checkbox" data-id="auto-buy">Comprar automaticamente os itens que faltam antes de construir</label><button data-id="buy">Comprar quantidades selecionadas</button></div><div class="ps-builder-location"><div><strong>Onde construir</strong><small data-id="origin">Nenhum piso selecionado</small></div><button data-id="select">Selecionar piso no quarto</button></div><div data-id="progress" hidden><progress data-id="progress-bar" max="1" value="0"></progress><small data-id="progress-text"></small></div><p data-id="status" role="status" aria-live="polite"></p><div class="ps-builder-actions"><button data-id="stop" hidden>Parar</button><button data-id="build" class="ps-builder-primary">Construir projeto</button></div><footer>Feito por Pricilao. · PixelSquad</footer></div>`;
+    root.innerHTML=`<header data-id="header"><div><small>PIXELSQUAD / CONSTRUÇÃO</small><strong>Construtor de projetos</strong></div><div><button data-id="minimize" aria-label="Minimizar ou expandir construtor" aria-expanded="true">−</button><button data-id="close" aria-label="Fechar construtor">×</button></div></header><div class="ps-builder-body"><p data-id="room" class="ps-builder-room">Conectando ao quarto…</p><div class="ps-builder-prompt"><label for="ps-builder-description">O que você quer construir?</label><div><input id="ps-builder-description" data-id="description" placeholder="Ex.: castelo 8x8 com altura 4" maxlength="300"><button data-id="suggest">Buscar projetos</button></div><small data-id="suggestion"></small></div><div data-id="projects" class="ps-builder-projects"></div><div class="ps-builder-workspace"><div class="ps-builder-preview"><div class="ps-builder-preview-title"><strong data-id="project-name"></strong><button data-id="rotate" title="Girar projeto 90 graus">↻ Girar</button></div><div data-id="preview"></div><strong data-id="size"></strong><small>Prévia em blocos. A altura final depende dos mobis escolhidos.</small></div><div class="ps-builder-options"><div class="ps-builder-dimensions"><label>Largura<input data-id="width" type="number" min="1" max="16" value="5"></label><label>Comprimento<input data-id="length" type="number" min="1" max="16" value="5"></label><label>Altura<input data-id="height" type="number" min="1" max="8" value="1"></label></div><label>Página da loja<select data-id="catalog-page"><option value="">Carregando páginas…</option></select></label><label>Mostrar<select data-id="material-source"><option value="all">Todos os mobis compatíveis</option><option value="inventory">Meu inventário</option><option value="shop">Itens das páginas carregadas da loja</option></select></label><label>Buscar mobis<input data-id="material-search" placeholder="Nome do bloco ou número do mobi"></label><small data-id="material-results"></small><small data-id="sources"></small><label>Base<select data-id="base"><option value="0">Carregando catálogo…</option></select></label><label>Estrutura<select data-id="body"><option value="0">Carregando catálogo…</option></select></label><label>Acabamento<select data-id="finish"><option value="0">Carregando catálogo…</option></select></label><small>Use mobis de 1 × 1 que permitam empilhamento.</small></div></div><div class="ps-builder-materials"><div><h3>Materiais e compra</h3><button data-id="refresh">Atualizar materiais</button></div><div data-id="materials-table" class="ps-builder-table"></div><p data-id="cost"></p><label class="ps-builder-checkbox"><input type="checkbox" data-id="auto-buy">Comprar automaticamente os itens que faltam antes de construir</label><button data-id="buy">Comprar quantidades selecionadas</button></div><div class="ps-builder-location"><div><strong>Onde construir</strong><small data-id="origin">Nenhum piso selecionado</small></div><button data-id="select">Selecionar piso no quarto</button></div><div data-id="progress" hidden><progress data-id="progress-bar" max="1" value="0"></progress><small data-id="progress-text"></small></div><p data-id="status" role="status" aria-live="polite"></p><div class="ps-builder-actions"><button data-id="stop" hidden>Parar</button><button data-id="build" class="ps-builder-primary">Construir projeto</button></div><footer>Feito por Pricilao. · PixelSquad</footer></div>`;
     document.body.append(root);cards();preview();movable();
     root.addEventListener('click',event=>{
       const card=event.target.closest('[data-project]');if(card&&!busy)choose(card.dataset.project);
@@ -155,8 +178,11 @@
       if(id==='stop'){rpc('cancel').catch(error=>status(error.message,true));status('Interrompendo a operação…');}
     });
     root.addEventListener('input',event=>{
-      if(['width','length','height','base','body','finish'].includes(event.target.dataset.id))preview();
-      if(event.target.dataset.id==='material-search'&&snapshot) {populate();preview();}
+      if(['width','length','height'].includes(event.target.dataset.id))preview();
+      if(['base','body','finish'].includes(event.target.dataset.id))invalidateMaterials();
+      if(event.target.dataset.id==='material-search'&&snapshot) {clearTimeout(searchTimer);searchTimer=setTimeout(()=>{if(root)populate();},160);}
+      if(event.target.dataset.id==='material-source')populate();
+      if(event.target.dataset.id==='catalog-page')catalogPage();
       if(event.target.dataset.buyId)costs();
       if(event.target.dataset.id==='auto-buy')costs();
     });
