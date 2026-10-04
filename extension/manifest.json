@@ -51,6 +51,18 @@
         "https://*.habblet.city/*"
       ],
       "js": [
+        "chat-links.js"
+      ],
+      "run_at": "document_idle",
+      "world": "ISOLATED",
+      "all_frames": true
+    },
+    {
+      "matches": [
+        "https://www.habblet.city/*",
+        "https://*.habblet.city/*"
+      ],
+      "js": [
         "anti-flood-config.js",
         "anti-flood-bridge.js",
         "builder-projects.js",

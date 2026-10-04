@@ -23,6 +23,14 @@ async function small(page,width=2,length=2,height=1) {for(const [key,value] of O
     const page=await browser.newPage({viewport:{width:1180,height:1000}}),errors=[];
     page.on('pageerror',error=>errors.push(error.message));await page.route('**/*',route=>route.fulfill({contentType:'text/html',body:html}));await page.goto('https://www.habblet.city/builder-fixture');await native(page);
     const cdp=await page.context().newCDPSession(page),contextId=await ui(page,cdp);await open(page);
+    await page.locator('.ps-builder-photo summary').click();
+    await control(page,'photo-file').setInputFiles({name:'quarto.png',mimeType:'image/png',buffer:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jD/8AAAAASUVORK5CYII=','base64')});
+    await control(page,'photo-preview').waitFor({state:'visible'});assert.match(await control(page,'photo-status').textContent(),/Nenhum item foi identificado ou comprado/);
+    assert.equal(await page.evaluate(()=>builderFixture.messages.filter(m=>[3492,1258].includes(m.header)).length),0);
+    await control(page,'photo-remove').click();assert(await control(page,'photo-preview').isHidden());
+    await control(page,'photo-file').setInputFiles({name:'invalid.png',mimeType:'image/png',buffer:Buffer.from('invalid image')});
+    await page.waitForFunction(()=>document.querySelector('[data-id=photo-status]').textContent.includes('Não foi possível'));
+    await page.locator('.ps-builder-photo summary').click();
     assert.equal(await control(page,'auto-buy').isChecked(),false);assert.equal(await page.locator('#pixelsquad-builder [data-project]').count(),8);
     await control(page,'description').fill('castelo 8x8 com altura 4');await control(page,'suggest').click();assert.equal(await control(page,'width').inputValue(),'8');assert.equal(await control(page,'height').inputValue(),'4');assert.match(await control(page,'size').textContent(),/8 × 8 pisos · 4 camadas/);assert.equal(await control(page,'preview').locator('canvas').count(),1);
     const previews='/tmp/pixelsquad-controls';fs.mkdirSync(previews,{recursive:true});await page.locator('#pixelsquad-builder').screenshot({path:path.join(previews,'builder-castle.png')});
