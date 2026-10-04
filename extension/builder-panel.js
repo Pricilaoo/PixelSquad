@@ -100,12 +100,12 @@
     const selected=get('catalog-page').value;get('catalog-page').innerHTML='<option value="">Escolha uma página da loja</option>'+(value.pages||[]).map(page=>`<option value="${page.id}">${escape(page.name)}</option>`).join('');if((value.pages||[]).some(page=>String(page.id)===selected))get('catalog-page').value=selected;
     get('sources').textContent=`Inventário: ${value.inventoryReady?value.inventoryCount+' mobis':'aguardando resposta'} · Loja: ${value.indexReady?(value.pages?.length||0)+' páginas':'aguardando resposta'}. Apenas mobis de 1 × 1 são compatíveis com estes projetos.`;
   }
-  async function refresh() {
-    if(busy)return;const revision=++refreshRevision;setBusy(true);status('Consultando o catálogo e o inventário…');
+  async function refresh(force=true) {
+    if(busy)return;quote=null;const revision=++refreshRevision;setBusy(true);status('Consultando o catálogo e o inventário…');
     try {
       if(!target) await rpc('discover',{}, {discover:true,timeout:8000});
       if(!root||revision!==refreshRevision)return;
-      const received=await rpc('snapshot',{force:true});if(!root||revision!==refreshRevision)return;acceptSnapshot(received);
+      const received=await rpc('snapshot',{force});if(!root||revision!==refreshRevision)return;acceptSnapshot(received);
       get('room').textContent=`Quarto ${snapshot.roomId}${snapshot.rights?' · construção disponível':' · sem direitos de construção'}`;
       if(origin?.roomId!==snapshot.roomId) {origin=null;get('origin').textContent='Nenhum piso selecionado';}
       populate();
@@ -137,9 +137,15 @@
     catch(error){status(error.message,true);}
   }
   async function execute(action) {
-    if(busy)return;if(!quote) {status('Clique em Atualizar materiais antes de continuar.',true);return;}
+    if(busy)return;
     if(action==='build'&&!origin) {status('Selecione primeiro o piso do quarto.',true);return;}
-    const activeRoot=root;setBusy(true);status(action==='buy'?'Comprando as quantidades selecionadas…':'Iniciando construção…');get('progress').hidden=false;
+    const activeRoot=root;
+    // Changing a template, dimension or material invalidates the quote. Recalculate
+    // on Build so a normal edit does not silently turn construction into a dead end.
+    if(action==='build'&&!quote) {await refresh(false);if(root!==activeRoot||!quote)return;}
+    if(!quote) {status('Clique em Atualizar materiais para conferir as quantidades de compra.',true);return;}
+    if(action==='build'&&!origin) {status('O quarto mudou. Selecione o piso novamente.',true);return;}
+    setBusy(true);status(action==='buy'?'Comprando as quantidades selecionadas…':'Iniciando construção…');get('progress').hidden=false;
     try {
       const quantities=Object.fromEntries(quote.rows.map(row=>[row.id,Number(root.querySelector(`[data-buy-id="${row.id}"]`)?.value||0)]));
       const result=await rpc(action,{quoteId:quote.id,origin,autoBuy:get('auto-buy').checked,quantities},{timeout:7200000});
