@@ -2,7 +2,19 @@
 
 Serviço privado para reconhecer fotos de Habbo/Habblet usando a Responses API da OpenAI. Não está hospedado nem ativado automaticamente pela atualização da extensão. É necessário configurar uma conta de API com faturamento e executar este servidor. A assinatura do ChatGPT não configura este serviço.
 
-## Ativação local (Node.js 22+)
+## Configuração por tela no Windows
+
+1. Extraia o pacote `PixelSquad-IA-configurador.zip` numa pasta do seu computador. Não execute de dentro do ZIP.
+2. Com Node.js 22 ou superior instalado, dê dois cliques em `INICIAR-IA.cmd`.
+3. O navegador abre a tela local. Cole uma **nova chave da OpenAI** no campo e clique em **Salvar chave e iniciar**. Se o navegador não abrir, use o endereço que aparece na janela do servidor.
+4. A tela mostra o endereço do servidor e o token PixelSquad. No jogo, vá a **Construção → Foto de referência → Configurar IA** e cole esses dois valores. A chave da OpenAI não vai na extensão.
+5. Mantenha a janela do servidor aberta. Nas próximas vezes, abra `INICIAR-IA.cmd` novamente; a chave salva é reutilizada. Reconecte o token na extensão após reiniciar o navegador.
+
+A chave fica no arquivo `.env` desta pasta, fora da extensão. Não compartilhe esse arquivo ou a pasta já configurada. O formulário não testa nem consome a API: a primeira análise verifica se a chave funciona e se há saldo. Para trocar a chave, feche o servidor, remova apenas o arquivo `.env` local e abra o configurador novamente.
+
+A configuração serve para este computador; não hospeda o servidor online. A extensão 0.5.3.22 já é compatível.
+
+## Ativação manual (Node.js 22+)
 
 1. Crie uma chave de projeto na sua conta em https://platform.openai.com/api-keys. Configure limites de gastos na conta. Não cole a chave na extensão, no chat ou no GitHub.
 2. Copie `.env.example` para `.env` nesta pasta. Preencha `OPENAI_API_KEY` apenas nesse arquivo/ambiente do servidor.

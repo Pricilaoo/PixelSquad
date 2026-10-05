@@ -42,3 +42,14 @@ jobs:
           name: PixelSquad-controls-preview
           path: /tmp/pixelsquad-controls/
           if-no-files-found: ignore
+
+      - name: Save local AI configurator
+        uses: actions/upload-artifact@v4
+        with:
+          name: PixelSquad-IA-configurador
+          path: |
+            services/vision/server.mjs
+            services/vision/setup.mjs
+            services/vision/INICIAR-IA.cmd
+            services/vision/README.md
+          if-no-files-found: error

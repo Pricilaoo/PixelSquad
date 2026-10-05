@@ -1,8 +1,8 @@
 {
   "private": true,
   "scripts": {
-    "test": "node loading.cjs && node game-context.cjs && node ui.cjs && node performance.cjs && node avatar.cjs && node launcher.cjs && node rgb.cjs && node catalog.cjs && node anti-flood.cjs && node builder.cjs && node vision.cjs",
-    "test:browser": "node navigation-browser.cjs && node commands-browser.cjs && node builder-browser.cjs && node chat-links-browser.cjs"
+    "test": "node loading.cjs && node game-context.cjs && node ui.cjs && node performance.cjs && node avatar.cjs && node launcher.cjs && node rgb.cjs && node catalog.cjs && node anti-flood.cjs && node builder.cjs && node vision.cjs && node vision-setup.cjs",
+    "test:browser": "node navigation-browser.cjs && node commands-browser.cjs && node builder-browser.cjs && node chat-links-browser.cjs && node vision-setup-browser.cjs"
   },
   "devDependencies": {
     "linkedom": "0.18.13",
