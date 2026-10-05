@@ -188,7 +188,7 @@
     status('Revise a disposição sugerida pela foto, atualize os materiais e confira os custos. Depois selecione o piso e clique em Construir projeto.');
   }
   function clearPhoto() {
-    ++photoRevision;photoFile=null;photoAnalysis=null;photoPlan=null;analyzing=false;
+    ++photoRevision;photoFile=null;photoAnalysis=null;analyzing=false;
     if(referenceURL)URL.revokeObjectURL(referenceURL);referenceURL=null;
     if(!root)return;
     get('photo-preview').removeAttribute('src');get('photo-preview').hidden=true;
@@ -212,7 +212,7 @@
     }
   }
   function close() {
-    clearPhoto();
+    clearPhoto();photoPlan=null;
     ++refreshRevision;clearTimeout(searchTimer);searchTimer=null;previewKey='';searchItems=[];if(target)rpc('cancel').catch(()=>{});
     root?.remove();window.removeEventListener('resize',resize);root=null;busy=false;selectionId=null;operationId=null;quote=null;origin=null;
   }

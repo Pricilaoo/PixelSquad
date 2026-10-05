@@ -80,6 +80,7 @@ async function small(page,width=2,length=2,height=1) {for(const [key,value] of O
     await control(photo,'photo-analyze').click();await control(photo,'photo-apply').waitFor({state:'visible'});assert.match(await control(photo,'photo-result').textContent(),/Bloco Verde/);
     assert.equal(await photo.evaluate(()=>builderFixture.messages.filter(m=>[3492,1258].includes(m.header)).length),0);
     await control(photo,'photo-apply').click();assert.match(await control(photo,'size').textContent(),/2 × 1 pisos.*2 blocos/);assert.equal(await control(photo,'auto-buy').isChecked(),false);
+    await control(photo,'photo-remove').click();assert.match(await control(photo,'size').textContent(),/2 × 1 pisos.*2 blocos/);
     await photo.locator('.ps-builder-photo summary').click();await control(photo,'select').click();await control(photo,'preview').waitFor({state:'hidden'});await photo.locator('#room-floor').click();await control(photo,'preview').waitFor();await control(photo,'build').click();
     await photo.waitForFunction(()=>document.querySelector('[data-id=status]').textContent.includes('Construção concluída'));
     assert.deepEqual(await photo.evaluate(()=>builderFixture.objects.map(o=>[o.x,o.y])),[[5,5],[6,5]]);assert.equal(await photo.evaluate(()=>builderFixture.messages.filter(m=>m.header===3492).length),0);
