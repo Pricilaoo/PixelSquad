@@ -6,6 +6,7 @@ on:
     paths:
       - 'extension/**'
       - 'tests/**'
+      - 'services/vision/**'
       - 'referencias/html/**'
       - '.github/workflows/validate-item-catalog.yml'
 
@@ -25,7 +26,7 @@ jobs:
           node-version: 22
       - name: Validate JavaScript syntax
         run: |
-          for file in extension/*.js tests/*.cjs; do
+          for file in extension/*.js tests/*.cjs services/vision/*.mjs; do
             node --check "$file"
           done
       - name: Install test dependencies

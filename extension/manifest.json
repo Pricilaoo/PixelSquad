@@ -268,5 +268,17 @@
         "https://*.habblet.city/*"
       ]
     }
+  ],
+  "background": {
+    "service_worker": "vision-background.js"
+  },
+  "options_ui": {
+    "page": "vision-options.html",
+    "open_in_tab": true
+  },
+  "optional_host_permissions": [
+    "https://*/*",
+    "http://localhost/*",
+    "http://127.0.0.1/*"
   ]
 }

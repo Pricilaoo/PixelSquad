@@ -20,7 +20,23 @@
     const height=query.match(/(?:altura|alto|niveis|andares)\s*(?:de\s*)?(\d{1,2})/) || query.match(/(\d{1,2})\s*(?:de altura|andares|niveis)/);
     return {width:size?Number(size[1]):project.width,length:size?Number(size[2]):project.length,height:height?Number(height[1]):project.height};
   }
+  function createPhoto(input) {
+    if(!Array.isArray(input.cells)||!input.cells.length||input.cells.length>256)throw Error('O projeto da foto precisa ter entre 1 e 256 blocos.');
+    const occupied=new Set(),rotation=Number(input.rotation||0);
+    if(!Number.isInteger(rotation)||rotation<0||rotation>3)throw Error('Rotação inválida.');
+    const cells=input.cells.map(cell=>{
+      if(!['x','y','z','catalogId'].every(key=>Number.isSafeInteger(cell[key]))||cell.x<0||cell.x>15||cell.y<0||cell.y>15||cell.z<0||cell.z>7||cell.catalogId<=0)throw Error('A foto contém uma posição ou um mobi inválido.');
+      const key=`${cell.x},${cell.y},${cell.z}`;if(occupied.has(key))throw Error('A foto contém blocos sobrepostos.');occupied.add(key);
+      return {x:cell.x,y:cell.y,z:cell.z,role:`photo-${cell.catalogId}`};
+    });
+    for(const cell of cells)if(cell.z>0&&!occupied.has(`${cell.x},${cell.y},${cell.z-1}`))throw Error('A foto contém blocos sem apoio. Não é possível construir automaticamente.');
+    const w=Math.max(...cells.map(c=>c.x))+1,l=Math.max(...cells.map(c=>c.y))+1;
+    for(const cell of cells){const {x,y}=cell;[cell.x,cell.y]=rotation===1?[l-1-y,x]:rotation===2?[w-1-x,l-1-y]:rotation===3?[y,w-1-x]:[x,y];}
+    cells.sort((a,b)=>a.z-b.z||a.y-b.y||a.x-b.x);
+    return {project:'photo',name:'Projeto sugerido pela foto',width:rotation%2?l:w,length:rotation%2?w:l,height:Math.max(...cells.map(c=>c.z))+1,rotation,cells};
+  }
   function create(input) {
+    if(input?.project==='photo')return createPhoto(input);
     const project=projects.find(item=>item.id===input?.project); if(!project) throw Error('Escolha um projeto da biblioteca.');
     const values=Object.fromEntries(['width','length','height'].map(key=>[key,Number(input[key]??project[key])]));
     for(const key of ['width','length']) if(!Number.isInteger(values[key])||values[key]<1||values[key]>16) throw Error('Largura e comprimento precisam estar entre 1 e 16 pisos.');
