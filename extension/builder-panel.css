@@ -70,4 +70,4 @@
 #pixelsquad-builder .ps-builder-photo img[hidden]{display:none}
 #pixelsquad-builder .ps-builder-photo p{font-size:12px;line-height:1.5;overflow-wrap:anywhere}
 
-#pixelsquad-builder [data-id=photo-result]{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.6 system-ui;max-height:180px;overflow:auto}
+#pixelsquad-builder [data-id=photo-result],#pixelsquad-builder [data-id=inventory-diagnostics]{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.6 system-ui;max-height:180px;overflow:auto}

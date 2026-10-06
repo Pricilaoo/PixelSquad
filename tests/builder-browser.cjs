@@ -31,6 +31,7 @@ async function small(page,width=2,length=2,height=1) {for(const [key,value] of O
     await control(page,'photo-file').setInputFiles({name:'invalid.png',mimeType:'image/png',buffer:Buffer.from('invalid image')});
     await page.waitForFunction(()=>document.querySelector('[data-id=photo-status]').textContent.includes('Não foi possível'));
     await page.locator('.ps-builder-photo summary').click();
+    assert.match(await control(page,'inventory-diagnostics').textContent(),/1 itens recebidos.*1 compatíveis/);
     assert.equal(await control(page,'auto-buy').isChecked(),false);assert.equal(await page.locator('#pixelsquad-builder [data-project]').count(),8);
     await control(page,'description').fill('castelo 8x8 com altura 4');await control(page,'suggest').click();assert.equal(await control(page,'width').inputValue(),'8');assert.equal(await control(page,'height').inputValue(),'4');assert.match(await control(page,'size').textContent(),/8 × 8 pisos · 4 camadas/);assert.equal(await control(page,'preview').locator('canvas').count(),1);
     const previews='/tmp/pixelsquad-controls';fs.mkdirSync(previews,{recursive:true});await page.locator('#pixelsquad-builder').screenshot({path:path.join(previews,'builder-castle.png')});

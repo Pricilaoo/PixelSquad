@@ -149,6 +149,7 @@ async function validateControls(page) {
     assert(await launch.isHidden()); await page.keyboard.press('Shift+B'); assert.equal(await page.locator('#pixelsquad').count(), 0);
     await page.evaluate(html => {document.body.innerHTML = html;}, markup);
     await launch.waitFor({state: 'visible'});
+    await page.keyboard.press('Shift+B'); assert.equal(await page.locator('#pixelsquad').count(), 0, 'Shift+B must not open the panel inside the game');
     await launch.click(); await page.waitForSelector('#pixelsquad'); assert.equal(await launch.getAttribute('aria-expanded'), 'true');
     const iconBox = await launch.boundingBox();
     await page.mouse.move(iconBox.x + iconBox.width / 2, iconBox.y + iconBox.height / 2); await page.mouse.down();

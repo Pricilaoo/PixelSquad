@@ -94,7 +94,7 @@
     if (header === 1534) latestPlacement = parser.item && {ref:parser.item.itemId, id:parser.item.spriteId, x:parser.item.x, y:parser.item.y, z:parser.item.z};
     wake();
   }
-  function copyItem(item) {return {itemId:Number(item.itemId), ref:Number(item.ref), id:Number(item.spriteId), floor:String(item.furniType).toUpperCase() === 'S' && !item.isWallItem, free:Number(item.flatId) === 0 && !item.rentable};}
+  function copyItem(item) {return {itemId:Number(item.itemId), ref:Number(item.ref), id:Number(item.spriteId), floor:String(item.furniType).toUpperCase() === 'S' && !item.isWallItem, free:Number(item.flatId) === 0};}
   function clearInventory() {inventory.clear();stockByType.clear();}
   function removeItem(id) {const item=inventory.get(id);if(item){const group=stockByType.get(item.id);group?.delete(id);if(group&&!group.size)stockByType.delete(item.id);}inventory.delete(id);}
   function putItem(raw) {const item=copyItem(raw);removeItem(item.itemId);inventory.set(item.itemId,item);if(item.floor&&item.free&&Number.isSafeInteger(item.itemId)&&item.itemId!==0&&Number.isSafeInteger(item.ref)&&item.ref>0){const group=stockByType.get(item.id)||new Map();group.set(item.itemId,item);stockByType.set(item.id,group);}}
@@ -152,10 +152,28 @@
     await until(()=>loadedPages.has(pageId),8000,null,'A página da loja não respondeu. Abra essa página no catálogo do jogo e tente novamente.');
     return snapshot();
   }
+  function inventoryDiagnostics(materials) {
+    const compatible=new Set(materials.map(item=>item.id)),excluded=new Map();let usable=0;
+    for(const item of inventory.values()) {
+      let reason;
+      if(!item.floor) reason='Mobi de parede; este construtor usa blocos de piso.';
+      else if(!item.free) reason='O inventário informa que este mobi está vinculado a um quarto.';
+      else if(!stockByType.get(item.id)?.has(item.itemId)) reason='O cliente não forneceu um identificador válido para colocar este mobi.';
+      else if(!compatible.has(item.id)) {
+        const data=engine()?.sessionDataManager?.getFloorItemData?.(item.id);
+        reason=data?`Tamanho ${data.tileSizeX} × ${data.tileSizeY}; os projetos atuais aceitam mobis de 1 × 1.`:'Os dados de tamanho e nome deste mobi ainda não estão disponíveis no cliente.';
+      }
+      if(!reason){++usable;continue;}
+      const key=`${item.floor?'floor':'wall'}:${item.id}:${reason}`,entry=excluded.get(key);
+      if(entry)++entry.quantity;
+      else {const data=item.floor?engine()?.sessionDataManager?.getFloorItemData?.(item.id):null;excluded.set(key,{id:item.id,name:String(data?.name||data?.className||`Mobi #${item.id}`),quantity:1,reason});}
+    }
+    return {total:inventory.size,usable,excludedTypes:excluded.size,excluded:[...excluded.values()].slice(0,50)};
+  }
   async function snapshot(options={}) {
     const room=ready();if(options.force)metadataCache=null; const warnings=await synchronize(options);ready(room.roomId);
     const materials=metadata();if(!materials.length)warnings.push('Os dados dos mobis ainda não carregaram. Abra a loja ou o inventário e atualize os materiais.');
-    return {roomId:room.roomId,rights:!room.isSpectator&&room.controllerLevel>=1,materials,inventoryReady,indexReady,warnings,pages:[...catalogPages.values()],inventoryCount:inventoryReady?[...stockByType.values()].reduce((n,items)=>n+items.size,0):null};
+    return {roomId:room.roomId,rights:!room.isSpectator&&room.controllerLevel>=1,materials,inventoryReady,indexReady,inventoryDiagnostics:inventoryReady?inventoryDiagnostics(materials):null,warnings,pages:[...catalogPages.values()],inventoryCount:inventoryReady?[...stockByType.values()].reduce((n,items)=>n+items.size,0):null};
   }
   async function quote(data) {
     if (job) throw Error('Aguarde a operação atual ou clique em Parar.');
