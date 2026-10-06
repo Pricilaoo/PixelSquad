@@ -10,6 +10,19 @@
       return ['https:', 'http:'].includes(url.protocol) && url.hostname.includes('.') && !url.username && !url.password ? url.href : null;
     } catch {return null;}
   }
+  function linkAddress(link) {
+    const href=address(link.getAttribute('href'));
+    if(href)return href;
+    const visible=address(link.textContent.trim());
+    if(visible && /(^|\.)(zyo\.se|aylo\.me)$/i.test(new URL(visible).hostname))return visible;
+    return null;
+  }
+  function decorate(link) {
+    const href=linkAddress(link);if(!href)return;
+    link.href=href;link.target='_blank';link.rel='noopener noreferrer';link.title=`Abrir ${href}`;
+    link.style.setProperty('text-decoration','underline','important');
+    link.style.setProperty('cursor','pointer');link.style.setProperty('pointer-events','auto');
+  }
   function convert(node) {
     if (node.nodeType === 3) {
       const text = node.nodeValue, matches = [...text.matchAll(pattern)];
@@ -23,13 +36,14 @@
         fragment.append(document.createTextNode(text.slice(end, match.index)));
         const link = document.createElement('a'); link.href = href; link.textContent = label;
         link.target = '_blank'; link.rel = 'noopener noreferrer'; link.title = `Abrir ${href}`;
-        link.style.cssText = 'color:inherit;text-decoration:underline;cursor:pointer;pointer-events:auto';
+        link.style.color='inherit';decorate(link);
         fragment.append(link); end = match.index + label.length;
       }
       if (!end) return;
       fragment.append(document.createTextNode(text.slice(end))); node.replaceWith(fragment); return;
     }
-    if (node.nodeType !== 1 || node.matches('a,button,input,textarea,script,style,[contenteditable]')) return;
+    if(node.nodeType===1 && node.matches('a')){decorate(node);return;}
+    if (node.nodeType !== 1 || node.matches('button,input,textarea,script,style,[contenteditable]')) return;
     for (const child of [...node.childNodes]) convert(child);
   }
   function scan(node) {
@@ -55,7 +69,7 @@
   document.addEventListener('click', event => {
     const link = event.target.closest?.(`${selector} a`);
     if (!window.PixelSquadGame?.active || !link || event.button !== 0 || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
-    const href = address(link.getAttribute('href'));
+    const href = linkAddress(link);
     if (!href) return;
     event.preventDefault(); event.stopImmediatePropagation();
     window.open(href, '_blank', 'noopener,noreferrer');
