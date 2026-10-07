@@ -22,6 +22,13 @@ const {chromium}=require('playwright-core');
   for(let i=0;i<2;i++){assert.match(await page.locator('.message a').nth(i).evaluate(a=>getComputedStyle(a).textDecorationLine),/underline/);await page.locator('.message a').nth(i).click();}
   assert.deepEqual(await page.evaluate(()=>opened.slice(-2).map(x=>x[0])),['https://zyo.se/Native','https://aylo.me/Native']);assert.equal(await page.evaluate(()=>nativeClicks),0);
   console.log('PASS: zyo.se and aylo.me with/without scheme, www, preserved paths/query/hash, forced underline on native anchors and one-click opening');
+  await page.evaluate(()=>{const profile=document.createElement('section');profile.innerHTML='<div class="nitro-infostand"><div class="motto-content">Missão: zyo.se/Missao <input value="aylo.me/editavel"></div></div><div class="user-profile"><div class="user-container"><b>nick.com</b><div class="fst-italic">aylo.me/Perfil</div></div><button>amigo.com</button></div>';document.body.append(profile);});
+  await page.waitForFunction(()=>document.querySelectorAll('.motto-content a,.user-profile a').length===2);
+  await page.locator('.motto-content a').click();assert.equal(await page.evaluate(()=>opened.at(-1)[0]),'https://zyo.se/Missao');
+  await page.locator('.user-profile a').click();assert.equal(await page.evaluate(()=>opened.at(-1)[0]),'https://aylo.me/Perfil');
+  assert.equal(await page.locator('.user-profile b a,.user-profile button a').count(),0);assert.equal(await page.locator('.motto-content input').inputValue(),'aylo.me/editavel');
+  await page.locator('.user-profile .fst-italic').evaluate(el=>el.textContent='Novo: https://example.org/perfil');await page.waitForFunction(()=>document.querySelector('.user-profile a')?.href==='https://example.org/perfil');
+  console.log('PASS: mission and profile links, profile changes, editable mission and native profile controls preserved');
   await page.evaluate(()=>{PixelSquadGame.active=false;document.querySelector('.message').textContent='https://example.com';});await page.waitForTimeout(30);assert.equal(await page.locator('.message a').count(),0);
   await page.evaluate(()=>{PixelSquadGame.active=true;dispatchEvent(new Event('pixelsquad-game-change'));});await page.waitForFunction(()=>document.querySelector('.message a'));
   console.log('PASS: one-click normal/shortened chat URLs, punctuation, query/hash, native anchors, no email/script linkification, game-only activation');

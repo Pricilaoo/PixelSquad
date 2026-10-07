@@ -44,7 +44,8 @@ window.createNativeBuilderFixture = function(options={}) {
       if(options.purchaseError){emit(1404,{error:1});return true;}
       if(options.purchaseTimeout)return true;
       const id=args[1]===501?1:2,count=args[3]*(options.packSize||1);emit(869,{offer:offer(id)});
-      if(!options.missingDelivery)emit(104,{items:add(id,count)});
+      if(options.delayedDelivery)setTimeout(()=>{add(id,count);emit(3151,{});},300);
+      else if(!options.missingDelivery)emit(104,{items:add(id,count)});
     }
     if(header===1258 && !options.placeTimeout) {
       const [itemId,x,y]=args[0].split(' ').map(Number),item=items.get(itemId);if(!item)throw Error('Missing inventory item');

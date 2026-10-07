@@ -1,7 +1,8 @@
 (() => {
   if (window.__PIXELSQUAD_CHAT_LINKS__) return;
   window.__PIXELSQUAD_CHAT_LINKS__ = true;
-  const selector = '.bubble-container .chat-content .message';
+  const surfaces=['.bubble-container .chat-content .message','.nitro-infostand .motto-content','.user-profile .user-container .fst-italic'];
+  const selector=surfaces.join(','),linkSelector=surfaces.map(value=>`${value} a`).join(',');
   const pattern = /https?:\/\/[^\s<>"']+|(?:www\.)?(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,63}(?::\d+)?(?:[/?#][^\s<>"']*)?/gi;
   function address(value) {
     if (!value || /[\s\u0000-\u001f\u007f]/.test(value)) return null;
@@ -67,7 +68,7 @@
     if (document.body) scan(document.body);
   }
   document.addEventListener('click', event => {
-    const link = event.target.closest?.(`${selector} a`);
+    const link = event.target.closest?.(linkSelector);
     if (!window.PixelSquadGame?.active || !link || event.button !== 0 || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
     const href = linkAddress(link);
     if (!href) return;

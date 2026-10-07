@@ -163,6 +163,7 @@ console.log('PASS: pointer/keyboard resizing, saved dimensions, viewport limits 
 (async()=>{
  const mergeFixture=fixture({},'',{pixelsquad_handitems:[
   {id:1,name:'Changed',image:'https://example.com/changed.png'},
+  {id:2,name:'ToolsBlet name',image:'https://www.toolsblet.in/observed-test-image.gif',source:'ToolsBlet'},
   {id:10000,name:'Extra',image:'https://example.com/extra.png'},
   {id:null,name:'Invalid'},{id:'',name:'Invalid'},{id:-1,name:'Invalid'}
  ]});
@@ -171,6 +172,7 @@ console.log('PASS: pointer/keyboard resizing, saved dimensions, viewport limits 
  await mergeFixture.document.querySelector('#ps-enable-refresh').onclick();
  assert.equal(mergeFixture.document.querySelectorAll('.enable-card').length,297);
  assert.equal(mergeFixture.document.querySelector('[data-item-id="1"]').closest('.enable-card').querySelector('strong').textContent,'Cha');
+ assert.equal(mergeFixture.document.querySelector('[data-item-id="2"]').closest('.enable-card').querySelector('img').getAttribute('src'),'https://www.toolsblet.in/observed-test-image.gif');
  assert(mergeFixture.document.querySelector('[data-item-id="10000"]'));
  assert(!mergeFixture.document.querySelector('[data-item-id="-1"]'));
  mergeFixture.open();assert(mergeFixture.document.querySelector('#ps-nav [data-tab=enables]').classList.contains('active'));

@@ -99,6 +99,19 @@
   function removeItem(id) {const item=inventory.get(id);if(item){const group=stockByType.get(item.id);group?.delete(id);if(group&&!group.size)stockByType.delete(item.id);}inventory.delete(id);}
   function putItem(raw) {const item=copyItem(raw);removeItem(item.itemId);inventory.set(item.itemId,item);if(item.floor&&item.free&&Number.isSafeInteger(item.itemId)&&item.itemId!==0&&Number.isSafeInteger(item.ref)&&item.ref>0){const group=stockByType.get(item.id)||new Map();group.set(item.itemId,item);stockByType.set(item.id,group);}}
   function stock(id) {return [...(stockByType.get(id)?.values() || [])];}
+  function allFurniture() {
+    const manager=engine()?.sessionDataManager;if(!manager)return [];
+    let source;try{source=manager.getAllFurnitureData?.(null);}finally{manager.removePendingFurniDataListener?.(null);}
+    return source || [...(manager._floorItems?.values?.()||[]),...(manager._wallItems?.values?.()||[])];
+  }
+  async function itemIds() {
+    ready();const warnings=await synchronize();
+    const owned=new Map();if(inventoryReady)for(const item of inventory.values())if(item.free){const key=`${item.floor?"s":"i"}:${item.id}`;owned.set(key,(owned.get(key)||0)+1);}
+    return {inventoryReady,warnings,items:allFurniture().filter(item=>Number.isSafeInteger(Number(item.id))&&Number(item.id)>0).map(item=>{
+      const type=String(item.type||"s").toLowerCase()==="i"?"i":"s",id=Number(item.id),width=Number(item.tileSizeX)||0,length=Number(item.tileSizeY)||0;
+      return {id,type,name:String(item.name||item.className||`Mobi ${id}`),className:String(item.className||""),width,length,stock:inventoryReady?(owned.get(`${type}:${id}`)||0):null,compatible:type==="s"&&width===1&&length===1};
+    })};
+  }
   function nativeFurniture() {
     const manager=engine()?.sessionDataManager;if(!manager)return [];
     const map=manager._floorItems;
@@ -266,8 +279,15 @@
         send(3492,[offer.pageId,offer.offerId,offer.extra,amount],[offer.pageId,offer.offerId,offer.extra,amount]);
         await until(()=>run.purchase.confirmed,12000,run,'A compra não foi confirmada. Nenhuma nova tentativa foi enviada; confira o inventário antes de tentar novamente.');
         run.bought+=expected; progress(run);
-        if(stock(row.id).length<before+expected) send(3150,[],[]);
-        await until(()=>inventoryReady && stock(row.id).length>=before+expected,12000,run,'A compra foi confirmada, mas os itens ainda não apareceram no inventário. Aguarde e confira antes de continuar.');
+        // Purchase acknowledgement can precede delivery and inventory invalidation.
+        // Retry only the read, at most once per second; never resend a purchase.
+        let nextRead=0,reading=false;
+        await until(()=>{
+          if(inventoryReady && stock(row.id).length>=before+expected)return true;
+          const now=Date.now();
+          if(!reading && now>=nextRead){nextRead=now+1000;reading=true;try{send(3150,[],[]);}finally{reading=false;}}
+          return inventoryReady && stock(row.id).length>=before+expected;
+        },20000,run,'A compra foi confirmada, mas os itens ainda não apareceram no inventário. Aguarde e confira antes de continuar.');
         run.purchase=null; packs-=amount; await sleep(450);
       }
     }
@@ -317,6 +337,7 @@
         let result;
         if(action==='discover') {const room=ready();result={roomId:room.roomId};}
         else if(action==='snapshot') result=await snapshot(data);
+        else if(action==='item-ids') result=await itemIds();
         else if(action==='catalog-page') result=await loadPage(data.pageId);
         else if(action==='quote') result=await quote(data);
         else if(action==='select') result=select(event.source,requestId);
@@ -328,7 +349,7 @@
     })();
     requests.set(requestId,{target:event.source,promise}); if(requests.size>100) requests.delete(requests.keys().next().value);
     post(event.source,await promise);
-    if(['snapshot','quote','catalog-page','discover'].includes(action))requests.delete(requestId);
+    if(['snapshot','quote','catalog-page','discover','item-ids'].includes(action))requests.delete(requestId);
   }
   window.addEventListener('message',handle);
   window.addEventListener('pixelsquad-native-room-ready',connect);

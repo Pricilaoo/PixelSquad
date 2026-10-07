@@ -71,3 +71,6 @@
 #pixelsquad-builder .ps-builder-photo p{font-size:12px;line-height:1.5;overflow-wrap:anywhere}
 
 #pixelsquad-builder [data-id=photo-result],#pixelsquad-builder [data-id=inventory-diagnostics]{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.6 system-ui;max-height:180px;overflow:auto}
+
+#pixelsquad .ps-item-ids{margin-top:18px;padding:14px;border:1px solid #ffffff22;border-radius:12px}
+.ps-item-ids [data-list]{max-height:350px;overflow:auto}.ps-item-ids article{display:flex;flex-wrap:wrap;gap:8px;padding:12px 0;border-bottom:1px solid #ffffff22}.ps-item-ids article strong,.ps-item-ids article small{width:100%;overflow-wrap:anywhere}.ps-item-ids article small{opacity:.8}.ps-item-ids button:disabled{opacity:.5;cursor:not-allowed}

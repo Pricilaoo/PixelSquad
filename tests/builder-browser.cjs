@@ -10,7 +10,7 @@ async function native(frame,options={}) {
 async function ui(page,cdp) {
   for(const name of ['content.css','panel-controls.css','builder-panel.css'])await page.addStyleTag({content:source(name)});
   const {frameTree}=await cdp.send('Page.getFrameTree'),{executionContextId}=await cdp.send('Page.createIsolatedWorld',{frameId:frameTree.frame.id,worldName:'PixelSquadBuilderFixture'});
-  const scripts=['game-context.js','locales.js','launcher.js','builder-projects.js','builder-panel.js','content.js'].map(source).join('\n');
+  const scripts=['game-context.js','locales.js','launcher.js','builder-projects.js','builder-panel.js','item-ids.js','content.js'].map(source).join('\n');
   const result=await cdp.send('Runtime.evaluate',{contextId:executionContextId,expression:'window.chrome={runtime:{getURL:()=>"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jD/8AAAAASUVORK5CYII=",onMessage:{addListener(){}}},storage:{local:{get:async()=>({}),set:async()=>{}},onChanged:{addListener(){}}}};\n'+scripts});
   assert(!result.exceptionDetails,JSON.stringify(result.exceptionDetails));return executionContextId;
 }
@@ -23,6 +23,7 @@ async function small(page,width=2,length=2,height=1) {for(const [key,value] of O
     const page=await browser.newPage({viewport:{width:1180,height:1000}}),errors=[];
     page.on('pageerror',error=>errors.push(error.message));await page.route('**/*',route=>route.fulfill({contentType:'text/html',body:html}));await page.goto('https://www.habblet.city/builder-fixture');await native(page);
     const cdp=await page.context().newCDPSession(page),contextId=await ui(page,cdp);await open(page);
+    await control(page,'owned-item').selectOption('1');await control(page,'use-owned').click();assert.equal(await control(page,'base').inputValue(),'1');assert.match(await control(page,'status').textContent(),/selecionado para todo/);await control(page,'material-search').fill('');await control(page,'refresh').click();await page.waitForFunction(()=>!!document.querySelector('#pixelsquad-builder tbody'));
     await page.locator('.ps-builder-photo summary').click();
     await control(page,'photo-file').setInputFiles({name:'quarto.png',mimeType:'image/png',buffer:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jD/8AAAAASUVORK5CYII=','base64')});
     await control(page,'photo-preview').waitFor({state:'visible'});assert.match(await control(page,'photo-status').textContent(),/Nenhum item foi identificado ou comprado/);
@@ -51,6 +52,11 @@ async function small(page,width=2,length=2,height=1) {for(const [key,value] of O
     await control(page,'close').click();assert.equal(await page.locator('#pixelsquad-builder').count(),0);await open(page);const restored=await page.locator('#pixelsquad-builder').boundingBox();assert(Math.abs(restored.x-after.x)<2);await small(page);await control(page,'select').click();await control(page,'preview').waitFor({state:'hidden'});await page.keyboard.press('Escape');await control(page,'preview').waitFor();assert.equal(await page.evaluate(()=>Object.hasOwn(builderFixture.handler,'handleRoomObjectEvent')),false);
     await page.setViewportSize({width:380,height:720});await page.waitForTimeout(100);const narrow=await page.locator('#pixelsquad-builder').boundingBox();assert(narrow.x>=0 && narrow.x+narrow.width<=380);const overflow=await page.locator('#pixelsquad-builder .ps-builder-body').evaluate(el=>el.scrollWidth>el.clientWidth);assert.equal(overflow,false);await page.locator('#pixelsquad-builder').screenshot({path:path.join(previews,'builder-mobile.png')});
     await cdp.send('Runtime.evaluate',{contextId,expression:'PixelSquadBuilder.close()'});
+    await page.locator('#pixelsquad-launch').click();await page.locator('#ps-nav [data-tab=settings]').click();
+    await page.locator('.ps-item-ids [data-load]').click();await page.waitForFunction(()=>document.querySelectorAll('.ps-item-ids article').length===3);
+    await page.locator('.ps-item-ids [data-search]').fill('#3');assert.equal(await page.locator('.ps-item-ids article').count(),1);assert.match(await page.locator('.ps-item-ids article').textContent(),/Sofá Grande/);assert(await page.locator('.ps-item-ids article button').nth(1).isDisabled());
+    await page.locator('.ps-item-ids [data-search]').fill('#2');await page.locator('.ps-item-ids article button').nth(1).click();await page.waitForFunction(()=>document.querySelector('#pixelsquad-builder [data-id=base]')?.value==='2');await control(page,'close').click();
+    await page.locator('#ps-close').click();
     // The top page has no client; only the trusted game frame may receive mutations.
     const embedded=await browser.newPage({viewport:{width:1180,height:1000}});embedded.on('pageerror',error=>errors.push(error.message));await embedded.route('**/*',route=>route.fulfill({contentType:'text/html',body:html}));await embedded.goto('https://www.habblet.city/builder-iframe');
     const frameReady=embedded.waitForEvent('framenavigated',{predicate:frame=>frame.url().includes('/room-fixture')});
@@ -66,6 +72,7 @@ async function small(page,width=2,length=2,height=1) {for(const [key,value] of O
     assert.match(await control(large,'sources').textContent(),/12000 mobis/);assert(await control(large,'base').locator('option').count()<=102);
     await control(large,'material-source').selectOption('inventory');assert.match(await control(large,'material-results').textContent(),/1 mobis/);
     await control(large,'catalog-page').selectOption('8');await large.waitForFunction(()=>document.querySelector('#pixelsquad-builder [data-id=status]').textContent.includes('Página da loja vinculada'));
+    await control(large,'shop-item').selectOption('2');await control(large,'use-shop').click();assert.equal(await control(large,'base').inputValue(),'2');assert.equal(await large.evaluate(()=>builderFixture.messages.filter(m=>m.header===3492).length),0);await control(large,'material-search').fill('');await large.waitForTimeout(200);
     await control(large,'material-source').selectOption('shop');assert.match(await control(large,'material-results').textContent(),/2 mobis/);
     await control(large,'material-source').selectOption('all');await control(large,'preview').locator('canvas').evaluate(node=>node.dataset.identity='same-preview');
     await control(large,'material-search').fill('Bloco Teste 3999');await large.waitForFunction(()=>[...document.querySelectorAll('#pixelsquad-builder [data-id=base] option')].some(o=>o.value==='3999'));
